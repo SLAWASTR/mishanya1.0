@@ -41,17 +41,17 @@
 
     /* PC Sidebar */
     #pc-sidebar {
-      width: 250px; height: 540px; background: var(--panel); border: 2px solid #ffa502;
-      border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column;
+      width: 255px; height: 540px; background: var(--panel); border: 2px solid #ffa502;
+      border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column;
       justify-content: space-between; box-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 10px rgba(255,165,2,0.2);
       font-size: 12px;
     }
     .sb-title {
-      font-size: 14px; font-weight: 900; color: #ffa502; text-align: center;
-      border-bottom: 2px dashed rgba(255,165,2,0.4); padding-bottom: 8px; margin-bottom: 8px;
+      font-size: 13px; font-weight: 900; color: #ffa502; text-align: center;
+      border-bottom: 2px dashed rgba(255,165,2,0.4); padding-bottom: 6px; margin-bottom: 6px;
       text-transform: uppercase;
     }
-    .sb-list { display: flex; flex-direction: column; gap: 7px; flex: 1; }
+    .sb-list { display: flex; flex-direction: column; gap: 6px; flex: 1; }
     .sb-item { display: flex; align-items: center; justify-content: space-between; }
     .sb-keys { display: flex; gap: 3px; }
     .key-badge {
@@ -61,24 +61,37 @@
     .sb-desc { color: #ced6e0; font-weight: bold; }
     .sb-highlight {
       background: rgba(112, 161, 255, 0.1); border-left: 3px solid #70a1ff;
-      padding: 4px 6px; font-size: 11px; color: #a4b0be; margin: 3px 0; border-radius: 0 4px 4px 0;
+      padding: 3px 5px; font-size: 10.5px; color: #a4b0be; margin: 2px 0; border-radius: 0 4px 4px 0;
     }
-    .sb-mode-card {
-      background: #201a2e; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
-      padding: 10px; text-align: center; margin-top: 6px;
+
+    /* 2 Mode Buttons */
+    .mode-selection-box {
+      background: #1e182a; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+      padding: 8px; text-align: center; margin-top: 4px;
     }
-    .mode-label { font-size: 11px; color: #a4b0be; margin-bottom: 5px; text-transform: uppercase; }
-    .toggle-mode-btn {
-      width: 100%; background: #ff4757; color: #fff; border: none; border-radius: 6px;
-      padding: 8px 10px; font-size: 12px; font-weight: 900; font-family: inherit;
-      cursor: pointer; transition: all 0.15s ease; box-shadow: 0 0 10px rgba(255,71,87,0.4);
+    .mode-label { font-size: 10px; color: #a4b0be; margin-bottom: 6px; text-transform: uppercase; font-weight: bold; }
+    .mode-btn-row { display: flex; gap: 6px; }
+    .mode-choice-btn {
+      flex: 1; background: #252033; color: #a4b0be; border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px; padding: 6px 4px; font-size: 10.5px; font-weight: 900; font-family: inherit;
+      cursor: pointer; transition: all 0.15s ease;
     }
-    .toggle-mode-btn:hover { background: #ff6b81; transform: scale(1.02); }
-    .toggle-mode-btn.family-mode {
-      background: #2ed573; box-shadow: 0 0 10px rgba(46,213,115,0.4);
+    .mode-choice-btn:hover { background: #2f2842; color: #fff; }
+    .mode-choice-btn.active.family {
+      background: #2ed573; color: #000; border-color: #2ed573; box-shadow: 0 0 10px rgba(46,213,115,0.5);
     }
-    .toggle-mode-btn.family-mode:hover { background: #26af5f; }
-    .mode-info-txt { font-size: 10px; color: #747d8c; margin-top: 5px; line-height: 1.3; }
+    .mode-choice-btn.active.adult {
+      background: #ff4757; color: #fff; border-color: #ff4757; box-shadow: 0 0 10px rgba(255,71,87,0.5);
+    }
+    .mode-info-txt { font-size: 9.5px; color: #747d8c; margin-top: 4px; line-height: 1.25; }
+
+    /* Credits Section */
+    .sb-credits {
+      border-top: 1px solid rgba(255,255,255,0.12); padding-top: 6px; margin-top: 6px;
+      text-align: center; font-size: 10px; color: #ced6e0;
+    }
+    .sb-credits-tag { color: #ffa502; font-weight: bold; letter-spacing: 1px; margin-bottom: 2px; }
+    .sb-credits-authors { color: #a4b0be; line-height: 1.3; }
 
     /* Top HUD */
     #hud {
@@ -127,29 +140,30 @@
     .screen-overlay {
       position: absolute; inset: 0; background: rgba(10, 8, 16, 0.92);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      z-index: 30; padding: 24px; text-align: center; backdrop-filter: blur(6px);
+      z-index: 30; padding: 20px; text-align: center; backdrop-filter: blur(6px);
     }
     .screen-title {
-      font-size: clamp(24px, 5.5vw, 42px); font-weight: 900; color: #ff4757;
-      text-shadow: 0 0 20px rgba(255, 71, 87, 0.8); margin-bottom: 12px; text-transform: uppercase;
+      font-size: clamp(22px, 5vw, 38px); font-weight: 900; color: #ff4757;
+      text-shadow: 0 0 20px rgba(255, 71, 87, 0.8); margin-bottom: 10px; text-transform: uppercase;
     }
-    .screen-subtitle { font-size: 14px; color: #ced6e0; max-width: 640px; line-height: 1.5; margin-bottom: 18px; }
+    .screen-subtitle { font-size: 13.5px; color: #ced6e0; max-width: 620px; line-height: 1.45; margin-bottom: 14px; }
     .btn-action {
       background: #ff4757; color: #fff; border: none; border-radius: 6px;
-      padding: 13px 32px; font-size: 18px; font-weight: 900; font-family: inherit;
+      padding: 12px 30px; font-size: 17px; font-weight: 900; font-family: inherit;
       cursor: pointer; box-shadow: 0 0 15px rgba(255, 71, 87, 0.5); transition: all 0.15s ease;
     }
     .btn-action:hover { background: #ff6b81; transform: translateY(-2px); box-shadow: 0 0 30px rgba(255, 71, 87, 0.8); }
-    .overlay-mode-bar {
-      margin-top: 14px; display: flex; align-items: center; gap: 12px;
-      background: rgba(255,255,255,0.06); padding: 6px 14px; border-radius: 20px;
+
+    .overlay-mode-section {
+      margin-top: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.06); padding: 8px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
     }
-    .overlay-mode-txt { font-size: 12px; color: #ced6e0; }
-    .overlay-mode-btn {
-      background: #252033; border: 1px solid #ffa502; color: #ffa502;
-      padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;
+    .overlay-mode-label { font-size: 11px; color: #a4b0be; font-weight: bold; }
+    .overlay-credits {
+      margin-top: 14px; font-size: 11px; color: #ffa502; letter-spacing: 0.5px;
     }
-    .overlay-mode-btn:hover { background: #ffa502; color: #000; }
+    .overlay-credits span { color: #ced6e0; }
+
     #touch-controls {
       display: none; position: absolute; bottom: 12px; left: 10px; right: 10px;
       justify-content: space-between; z-index: 20;
@@ -193,7 +207,7 @@
       </div>
 
       <div class="boss-bar-wrap" id="boss-hud">
-        <div class="boss-name" id="boss-label">⚡ ЕБУЧИЙ ХИНКАЛИ ⚡</div>
+        <div class="boss-name" id="boss-label">⚡ ГРОЗНЫЙ ХИНКАЛИ ⚡</div>
         <div class="boss-bar-bg"><div class="boss-bar-fill" id="boss-fill"></div></div>
       </div>
 
@@ -209,31 +223,43 @@
       </div>
 
       <div class="screen-overlay" id="start-screen">
-        <div class="screen-title" id="start-title">Миша Бурканин<br>и Ебучий Хинкали</div>
+        <div class="screen-title" id="start-title">Миша Бурканин<br>и Грозный Хинкали</div>
         <p class="screen-subtitle" id="start-subtitle">
-          Горячий, бульонный <strong>Ебучий Хинкали</strong> взбунтовался и бежит по Кавказскому хребту!<br>
-          Миша взлетает ввысь на двойных прыжках и достаёт весь свой адский арсенал!
+          Горячий и непредсказуемый <strong>Грозный Хинкали</strong> взбунтовался и бежит по Кавказскому хребту!<br>
+          Миша взлетает ввысь на двойных прыжках и возвращает беглеца на праздничный стол!
         </p>
         <button class="btn-action" id="btn-start">В БОЙ!</button>
-        <div class="overlay-mode-bar">
-          <span class="overlay-mode-txt">РЕЖИМ ИГРЫ:</span>
-          <button class="overlay-mode-btn" id="btn-overlay-mode">🔞 18+ (С МАТОМ)</button>
+
+        <!-- 2 Mode Buttons on Start Screen -->
+        <div class="overlay-mode-section">
+          <div class="overlay-mode-label">ВЫБЕРИТЕ РЕЖИМ ОЗВУЧКИ:</div>
+          <div class="mode-btn-row">
+            <button class="mode-choice-btn active family" id="btn-ovr-family">😇 БЕЗ МАТА (0+)</button>
+            <button class="mode-choice-btn" id="btn-ovr-adult">🔞 С МАТОМ (18+)</button>
+          </div>
+        </div>
+
+        <div class="overlay-credits">
+          1-26 ДИЗАЙН &bull; <span>Создатели: Мальцев, Даманин, Бурканин</span>
         </div>
       </div>
 
       <div class="screen-overlay" id="gameover-screen" style="display: none;">
-        <div class="screen-title" id="gameover-title">ТЕБЯ ЗАВАРИЛИ НАХУЙ!</div>
-        <p class="screen-subtitle" id="gameover-subtitle">«Сука, да этот бульон разъедает даже душу...» — Миша пал жертвой недоваренного фарша.</p>
+        <div class="screen-title" id="gameover-title">МИША ОБЖЁГСЯ БУЛЬОНОМ!</div>
+        <p class="screen-subtitle" id="gameover-subtitle">«Ой-ой-ой, какой горячий сок!» — Мише нужен отдых и глоток Боржоми.</p>
         <button class="btn-action" id="btn-restart">ВОСКРЕСНУТЬ И ОТОМСТИТЬ</button>
       </div>
 
       <div class="screen-overlay" id="victory-screen" style="display: none;">
-        <div class="screen-title" id="victory-title" style="color: #2ed573;">ХИНКАЛИ ВЫЕБАН И СЪЕДЕН!</div>
+        <div class="screen-title" id="victory-title" style="color: #2ed573;">ХИНКАЛИ ВЕЖЛИВО СЪЕДЕН!</div>
         <p class="screen-subtitle" id="victory-subtitle">
-          Ебучий Хинкали разлетелся на нежнейшее мясо и ароматный бульон!<br>
+          Грозный Хинкали рассыпался на нежнейшее мясо и ароматный бульон!<br>
           Миша Бурканин выпил литр Боржоми и сытно закусил кинзой. Победа!
         </p>
         <button class="btn-action" id="btn-win-restart">СЫГРАТЬ ЕЩЁ РАЗОК</button>
+        <div class="overlay-credits" style="margin-top: 18px;">
+          1-26 ДИЗАЙН &bull; <span>Создатели: Мальцев, Даманин, Бурканин</span>
+        </div>
       </div>
 
       <div id="touch-controls">
@@ -294,47 +320,59 @@
         </div>
       </div>
 
-      <!-- Mode Switcher -->
-      <div class="sb-mode-card">
-        <div class="mode-label">РЕЖИМ ОЗВУЧКИ / ТЕКСТА:</div>
-        <button class="toggle-mode-btn" id="btn-sidebar-mode">🔞 РЕЖИМ 18+ (С МАТОМ)</button>
-        <div class="mode-info-txt" id="mode-info-text">Отборный кавказский мат и ярость Бурканина!</div>
+      <!-- 2 Mode Buttons on Sidebar -->
+      <div class="mode-selection-box">
+        <div class="mode-label">ВЫБОР РЕЖИМА:</div>
+        <div class="mode-btn-row">
+          <button class="mode-choice-btn active family" id="btn-sb-family">😇 БЕЗ МАТА</button>
+          <button class="mode-choice-btn" id="btn-sb-adult">🔞 18+ (МАТ)</button>
+        </div>
+        <div class="mode-info-txt" id="mode-info-text">Семейный режим: без ругательств, для всех возрастов!</div>
+      </div>
+
+      <!-- Creators & Design Info -->
+      <div class="sb-credits">
+        <div class="sb-credits-tag">1-26 ДИЗАЙН</div>
+        <div class="sb-credits-authors">Создатели:<br><strong>Мальцев, Даманин, Бурканин</strong></div>
       </div>
     </div>
   </div>
 
   <script>
-    // --- Family-Friendly Mode State ---
-    let isFamilyFriendly = false;
+    // --- Family-Friendly Mode State (DEFAULT: TRUE) ---
+    let isFamilyFriendly = true;
 
-    function setFamilyMode(enabled) {
-      isFamilyFriendly = enabled;
-      const sideBtn = document.getElementById('btn-sidebar-mode');
-      const overBtn = document.getElementById('btn-overlay-mode');
+    function applyMode(modeFamily) {
+      isFamilyFriendly = modeFamily;
+
+      const sbFam = document.getElementById('btn-sb-family');
+      const sbAdu = document.getElementById('btn-sb-adult');
+      const ovrFam = document.getElementById('btn-ovr-family');
+      const ovrAdu = document.getElementById('btn-ovr-adult');
       const infoTxt = document.getElementById('mode-info-text');
 
       if (isFamilyFriendly) {
-        sideBtn.textContent = '😇 FAMILY-FRIENDLY (БЕЗ МАТА)';
-        sideBtn.classList.add('family-mode');
-        overBtn.textContent = '😇 FAMILY-FRIENDLY (БЕЗ МАТА)';
-        overBtn.style.borderColor = '#2ed573';
-        overBtn.style.color = '#2ed573';
-        infoTxt.textContent = 'Приличный режим: без ругательств, для всей семьи!';
+        // Active Family
+        sbFam.className = 'mode-choice-btn active family';
+        sbAdu.className = 'mode-choice-btn';
+        ovrFam.className = 'mode-choice-btn active family';
+        ovrAdu.className = 'mode-choice-btn';
+        infoTxt.textContent = 'Семейный режим: без ругательств, для всех возрастов!';
 
         document.getElementById('start-title').innerHTML = 'Миша Бурканин<br>и Грозный Хинкали';
-        document.getElementById('start-subtitle').innerHTML = 'Горячий и непредсказуемый <strong>Грозный Хинкали</strong> взбунтовался и бежит по Кавказскому хребту!<br>Миша взлетает ввысь на двойных прыжках и возвращает беглеца на тарелку!';
+        document.getElementById('start-subtitle').innerHTML = 'Горячий и непредсказуемый <strong>Грозный Хинкали</strong> взбунтовался и бежит по Кавказскому хребту!<br>Миша взлетает ввысь на двойных прыжках и возвращает беглеца на праздничный стол!';
         document.getElementById('gameover-title').textContent = 'МИША ОБЖЁГСЯ БУЛЬОНОМ!';
         document.getElementById('gameover-subtitle').textContent = '«Ой-ой-ой, какой горячий сок!» — Мише нужен отдых и глоток Боржоми.';
         document.getElementById('victory-title').textContent = 'ХИНКАЛИ ВЕЖЛИВО СЪЕДЕН!';
         document.getElementById('victory-subtitle').innerHTML = 'Грозный Хинкали рассыпался на нежнейшее мясо и ароматный бульон!<br>Миша Бурканин выпил литр Боржоми и сытно закусил кинзой. Победа!';
         document.getElementById('boss-label').textContent = '⚡ ГРОЗНЫЙ ХИНКАЛИ ⚡';
       } else {
-        sideBtn.textContent = '🔞 РЕЖИМ 18+ (С МАТОМ)';
-        sideBtn.classList.remove('family-mode');
-        overBtn.textContent = '🔞 18+ (С МАТОМ)';
-        overBtn.style.borderColor = '#ffa502';
-        overBtn.style.color = '#ffa502';
-        infoTxt.textContent = 'Отборный кавказский мат и ярость Бурканина!';
+        // Active Adult
+        sbFam.className = 'mode-choice-btn';
+        sbAdu.className = 'mode-choice-btn active adult';
+        ovrFam.className = 'mode-choice-btn';
+        ovrAdu.className = 'mode-choice-btn active adult';
+        infoTxt.textContent = 'Режим 18+: отборный кавказский мат и ярость Бурканина!';
 
         document.getElementById('start-title').innerHTML = 'Миша Бурканин<br>и Ебучий Хинкали';
         document.getElementById('start-subtitle').innerHTML = 'Горячий, бульонный <strong>Ебучий Хинкали</strong> взбунтовался и бежит по Кавказскому хребту!<br>Миша взлетает ввысь на двойных прыжках и достаёт весь свой адский арсенал!';
@@ -346,8 +384,10 @@
       }
     }
 
-    document.getElementById('btn-sidebar-mode').addEventListener('click', () => setFamilyMode(!isFamilyFriendly));
-    document.getElementById('btn-overlay-mode').addEventListener('click', () => setFamilyMode(!isFamilyFriendly));
+    document.getElementById('btn-sb-family').addEventListener('click', () => applyMode(true));
+    document.getElementById('btn-sb-adult').addEventListener('click', () => applyMode(false));
+    document.getElementById('btn-ovr-family').addEventListener('click', () => applyMode(true));
+    document.getElementById('btn-ovr-adult').addEventListener('click', () => applyMode(false));
 
     // --- Audio ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -966,7 +1006,9 @@
     }
 
     function loop() { update(); draw(); requestAnimationFrame(loop); }
-    buildLevel(); loop();
+    buildLevel();
+    applyMode(true); // Default to Family Friendly
+    loop();
   </script>
 </body>
 </html>

@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Миша Бурканин и Ебучий Хинкали — Платформер</title>
+  <style>
+    :root {
+      --bg: #121016;
+      --card-bg: #1c1826;
+      --accent: #ff4757;
+      --gold: #ffa502;
+      --green: #2ed573;
+      --cyan: #70a1ff;
+      --text: #f1f2f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', Courier, monospace, system-ui;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    #game-container {
+      position: relative;
+      width: 900px;
+      max-width: 100vw;
+      height: 520px;
+      max-height: 85vh;
+      background: #0d0a14;
+      border: 3px solid #ff4757;
+      border-radius: 8px;
+      box-shadow: 0 0 30px rgba(255, 71, 87, 0.35), inset 0 0 40px rgba(0, 0, 0, 0.8);
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+    }
+
+    /* Scanlines effect */
+    .scanlines {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+      background-size: 100% 4px;
+      z-index: 5;
+    }
+
+    /* Top HUD overlay */
+    #hud {
+      position: absolute;
+      top: 12px;
+      left: 15px;
+      right: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+      font-size: 15px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px #000;
+    }
+
+    .hud-block {
+      background: rgba(18, 16, 26, 0.75);
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hud-hearts {
+      color: #ff4757;
+      letter-spacing: 2px;
+    }
+
+    .boss-bar-wrap {
+      position: absolute;
+      top: 55px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 320px;
+      max-width: 80%;
+      background: rgba(0, 0, 0, 0.8);
+      border: 2px solid #ff4757;
+      border-radius: 8px;
+      padding: 4px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      z-index: 10;
+      box-shadow: 0 0 15px rgba(255, 71, 87, 0.5);
+    }
+
+    .boss-name {
+      font-size: 12px;
+      color: #ffa502;
+      font-weight: bold;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+    }
+
+    .boss-bar-bg {
+      width: 100%;
+      height: 12px;
+      background: #333;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .boss-bar-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #ff4757, #ffa502);
+      transition: width 0.15s ease-out;
+    }
+
+    /* Touch Controls */
+    #touch-controls {
+      display: none;
+      position: absolute;
+      bottom: 12px;
+      left: 10px;
+      right: 10px;
+      justify-content: space-between;
+      z-index: 20;
+    }
+
+    .touch-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .touch-btn {
+      width: 54px;
+      height: 54px;
+      background: rgba(255, 71, 87, 0.25);
+      border: 2px solid #ff4757;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .touch-btn:active {
+      background: #ff4757;
+      transform: scale(0.92);
+    }
+
+    /* Screen overlays: Menu, Game Over, Win */
+    .screen-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 8, 18, 0.88);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+      padding: 20px;
+      text-align: center;
+      backdrop-filter: blur(5px);
+    }
+
+    .screen-title {
+      font-size: clamp(22px, 5vw, 36px);
+      font-weight: 900;
+      color: #ff4757;
+      text-shadow: 0 0 15px rgba(255, 71, 87, 0.7);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .screen-subtitle {
+      font-size: 15px;
+      color: #ced6e0;
+      max-width: 520px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .btn-action {
+      background: #ff4757;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 12px 28px;
+      font-size: 17px;
+      font-weight: bold;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(255, 71, 87, 0.5);
+      transition: all 0.15s ease;
+    }
+    .btn-action:hover {
+      background: #ff6b81;
+      transform: translateY(-2px);
+      box-shadow: 0 0 25px rgba(255, 71, 87, 0.8);
+    }
+
+    .controls-hint {
+      margin-top: 18px;
+      font-size: 12px;
+      color: #a4b0be;
+    }
+
+    .sound-toggle {
+      position: absolute;
+      bottom: 10px;
+      right: 15px;
+      font-size: 11px;
+      color: #747d8c;
+      z-index: 10;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      #touch-controls {
+        display: flex;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <div class="scanlines"></div>
+
+    <div id="hud">
+      <div class="hud-block">
+        <span>МИША:</span>
+        <span class="hud-hearts" id="hud-hp">❤️❤️❤️</span>
+      </div>
+      <div class="hud-block">
+        <span>🌿 КИНЗА:</span>
+        <span id="hud-score" style="color: var(--green);">0</span>
+      </div>
+    </div>
+
+    <div class="boss-bar-wrap" id="boss-hud">
+      <div class="boss-name" id="boss-label">⚡ ЕБУЧИЙ ХИНКАЛИ ⚡</div>
+      <div class="boss-bar-bg">
+        <div class="boss-bar-fill" id="boss-fill"></div>
+      </div>
+    </div>
+
+    <!-- Start Overlay -->
+    <div class="screen-overlay" id="start-screen">
+      <div class="screen-title">Миша Бурканин<br>и Ебучий Хинкали</div>
+      <p class="screen-subtitle">
+        Горячий, бульонный и непредсказуемый <strong>Ебучий Хинкали</strong> сбежал с праздничного стола и устроил террор на кавказских перевалах!<br><br>
+        Миша Бурканин берет верную вилку, надевает парадный свитер и отправляется наказать дерзкое тесто.
+      </p>
+      <button class="btn-action" id="btn-start">В БОЙ!</button>
+      <div class="controls-hint">
+        🎮 <strong>Управление:</strong> [A] / [D] или [Стрелки] — бег, [Пробел] / [W] — прыжок, [F] или [X] — метать вилку
+      </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div class="screen-overlay" id="gameover-screen" style="display: none;">
+      <div class="screen-title" style="color: #ff4757;">БУЛЬОН ОБЖЁГ МИШУ!</div>
+      <p class="screen-subtitle">
+        Ебучий Хинкали оказался слишком горячим и сочным... Миша Бурканин пал жертвой гастрономического безумия.
+      </p>
+      <button class="btn-action" id="btn-restart">ПОПРОБОВАТЬ СНОВА</button>
+    </div>
+
+    <!-- Victory Screen -->
+    <div class="screen-overlay" id="victory-screen" style="display: none;">
+      <div class="screen-title" style="color: #2ed573;">ПОБЕДА БУРКАНИНА!</div>
+      <p class="screen-subtitle">
+        Ебучий Хинкали побеждён, сдобрен чёрным перчиком и съеден с огромным аппетитом без остатка (даже хвостик не пожалели)!<br><br>
+        Миша Бурканин празднует триумф!
+      </p>
+      <button class="btn-action" id="btn-win-restart">СЪЕСТЬ ЕЩЁ РАЗ</button>
+    </div>
+
+    <!-- Onscreen Touch Controls -->
+    <div id="touch-controls">
+      <div class="touch-group">
+        <div class="touch-btn" id="btn-left">◀</div>
+        <div class="touch-btn" id="btn-right">▶</div>
+      </div>
+      <div class="touch-group">
+        <div class="touch-btn" id="btn-atk" style="border-color: #ffa502;">🍴</div>
+        <div class="touch-btn" id="btn-jump">▲</div>
+      </div>
+    </div>
+
+    <div class="sound-toggle" id="sound-btn">🔊 ЗВУК ВКЛ</div>
+    <canvas id="gameCanvas" width="900" height="520"></canvas>
+  </div>
+
+  <script>
+    /* --- Audio Synthesizer (Web Audio API) --- */
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioContext();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        const t = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'jump') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(140, t);
+          osc.frequency.exponentialRampToValueAtTime(420, t + 0.12);
+          gain.gain.setValueAtTime(0.2, t);
+          gain.gain.linearRampToValueAtTime(0.01, t + 0.12);
+          osc.start(t);
+          osc.stop(t + 0.12);
+        } else if (type === 'coin') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(520, t);
+          osc.frequency.setValueAtTime(880, t + 0.08);
+          gain.gain.setValueAtTime(0.25, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+          osc.start(t);
+          osc.stop(t + 0.2);
+        } else if (type === 'fork') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(600, t);
+          osc.frequency.exponentialRampToValueAtTime(150, t + 0.1);
+          gain.gain.setValueAtTime(0.2, t);
+          gain.gain.linearRampToValueAtTime(0.01, t + 0.1);
+          osc.start(t);
+          osc.stop(t + 0.1);
+        } else if (type === 'hit') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(240, t);
+          osc.frequency.exponentialRampToValueAtTime(60, t + 0.2);
+          gain.gain.setValueAtTime(0.3, t);
+          gain.gain.linearRampToValueAtTime(0.01, t + 0.2);
+          osc.start(t);
+          osc.stop(t + 0.2);
+        } else if (type === 'boss_hit') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(120, t);
+          osc.frequency.exponentialRampToValueAtTime(30, t + 0.25);
+          gain.gain.setValueAtTime(0.4, t);
+          gain.gain.linearRampToValueAtTime(0.01, t + 0.25);
+          osc.start(t);
+          osc.stop(t + 0.25);
+        } else if (type === 'boss_steam') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, t);
+          osc.frequency.linearRampToValueAtTime(200, t + 0.3);
+          gain.gain.setValueAtTime(0.15, t);
+          gain.gain.linearRampToValueAtTime(0.01, t + 0.3);
+          osc.start(t);
+          osc.stop(t + 0.3);
+        } else if (type === 'win') {
+          const notes = [261.63, 329.63, 392.00, 523.25];
+          notes.forEach((freq, idx) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.frequency.setValueAtTime(freq, t + idx * 0.12);
+            g.gain.setValueAtTime(0.2, t + idx * 0.12);
+            g.gain.linearRampToValueAtTime(0.01, t + idx * 0.12 + 0.25);
+            o.start(t + idx * 0.12);
+            o.stop(t + idx * 0.12 + 0.25);
+          });
+        }
+      } catch (e) {
+        // Audio suspended or blocked
+      }
+    }
+
+    document.getElementById('sound-btn').addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      document.getElementById('sound-btn').textContent = soundEnabled ? '🔊 ЗВУК ВКЛ' : '🔇 ЗВУК ВЫКЛ';
+    });
+
+    /* --- Canvas and Game Engine --- */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const V_WIDTH = 900;
+    const V_HEIGHT = 520;
+
+    let gameState = 'START'; // START, PLAYING, GAMEOVER, WIN
+    let cameraX = 0;
+    let score = 0;
+    let floatingTexts = [];
+    let particles = [];
+    let forks = [];
+    let brothProjectiles = [];
+
+    const keys = {
+      left: false,
+      right: false,
+      jump: false,
+      attack: false
+    };
+
+    // Keyboard handlers
+    window.addEventListener('keydown', (e) => {
+      initAudio();
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+        if (!keys.jump && (gameState === 'PLAYING')) player.jump();
+        keys.jump = true;
+      }
+      if (e.code === 'KeyF' || e.code === 'KeyX') {
+        if (!keys.attack && (gameState === 'PLAYING')) player.attack();
+        keys.attack = true;
+      }
+      if (e.code === 'KeyR' && (gameState === 'GAMEOVER' || gameState === 'WIN')) {
+        startGame();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') keys.jump = false;
+      if (e.code === 'KeyF' || e.code === 'KeyX') keys.attack = false;
+    });
+
+    // Touch handlers
+    function setupTouch(id, keyProp, isAction = false, actionFn = null) {
+      const el = document.getElementById(id);
+      el.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        initAudio();
+        keys[keyProp] = true;
+        if (isAction && actionFn) actionFn();
+      });
+      el.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        keys[keyProp] = false;
+      });
+    }
+    setupTouch('btn-left', 'left');
+    setupTouch('btn-right', 'right');
+    setupTouch('btn-jump', 'jump', true, () => { if (gameState === 'PLAYING') player.jump(); });
+    setupTouch('btn-atk', 'attack', true, () => { if (gameState === 'PLAYING') player.attack(); });
+
+    /* --- Game Entities --- */
+
+    // Floating Text
+    class FloatingText {
+      constructor(x, y, text, color = '#ffa502') {
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.color = color;
+        this.life = 45;
+        this.vy = -1.2;
+      }
+      update() {
+        this.y += this.vy;
+        this.life--;
+      }
+      draw(c) {
+        c.save();
+        c.globalAlpha = Math.max(0, this.life / 45);
+        c.font = 'bold 15px Courier New, monospace';
+        c.fillStyle = this.color;
+        c.textAlign = 'center';
+        c.fillText(this.text, this.x - cameraX, this.y);
+        c.restore();
+      }
+    }
+
+    // Particle
+    class Particle {
+      constructor(x, y, color, vx, vy, size = 4, life = 25) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.vx = vx || (Math.random() - 0.5) * 5;
+        this.vy = vy || (Math.random() - 0.5) * 5;
+        this.size = size;
+        this.life = life;
+        this.maxLife = life;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life--;
+      }
+      draw(c) {
+        c.save();
+        c.globalAlpha = Math.max(0, this.life / this.maxLife);
+        c.fillStyle = this.color;
+        c.beginPath();
+        c.arc(this.x - cameraX, this.y, this.size, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+      }
+    }
+
+    // Fork (Player Projectile)
+    class Fork {
+      constructor(x, y, dir) {
+        this.x = x;
+        this.y = y;
+        this.w = 22;
+        this.h = 10;
+        this.dir = dir; // 1 or -1
+        this.vx = dir * 9;
+        this.life = 70;
+      }
+      update() {
+        this.x += this.vx;
+        this.life--;
+      }
+      draw(c) {
+        c.save();
+        c.translate(this.x - cameraX, this.y);
+        if (this.dir < 0) c.scale(-1, 1);
+        
+        // Fork handle
+        c.fillStyle = '#ced6e0';
+        c.fillRect(-10, -2, 14, 4);
+        // Fork base
+        c.fillStyle = '#f1f2f6';
+        c.fillRect(4, -5, 4, 10);
+        // Fork tines
+        c.fillStyle = '#ffffff';
+        c.fillRect(8, -5, 6, 2);
+        c.fillRect(8, -1, 6, 2);
+        c.fillRect(8, 3, 6, 2);
+
+        c.restore();
+      }
+    }
+
+    // Broth Blob (Boss Projectile)
+    class BrothBlob {
+      constructor(x, y, vx, vy) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.r = 9;
+        this.life = 120;
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.15; // gravity on broth
+        this.life--;
+      }
+      draw(c) {
+        c.save();
+        c.fillStyle = '#ff7f50';
+        c.beginPath();
+        c.arc(this.x - cameraX, this.y, this.r, 0, Math.PI * 2);
+        c.fill();
+        // Inner hot core
+        c.fillStyle = '#ffd32a';
+        c.beginPath();
+        c.arc(this.x - cameraX, this.y, this.r * 0.5, 0, Math.PI * 2);
+        c.fill();
+        c.restore();
+      }
+    }
+
+    // Player: Misha Burkanin
+    class Player {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = 100;
+        this.y = 350;
+        this.w = 34;
+        this.h = 56;
+        this.vx = 0;
+        this.vy = 0;
+        this.speed = 4.2;
+        this.jumpForce = -11.5;
+        this.isGrounded = false;
+        this.facing = 1; // 1: right, -1: left
+        this.hp = 3;
+        this.maxHp = 3;
+        this.invulnerableTimer = 0;
+        this.attackCooldown = 0;
+        this.animTimer = 0;
+      }
+      jump() {
+        if (this.isGrounded) {
+          this.vy = this.jumpForce;
+          this.isGrounded = false;
+          playSound('jump');
+          for (let i = 0; i < 5; i++) {
+            particles.push(new Particle(this.x + this.w/2, this.y + this.h, '#747d8c', (Math.random()-0.5)*3, -Math.random()*2, 3));
+          }
+        }
+      }
+      attack() {
+        if (this.attackCooldown <= 0) {
+          forks.push(new Fork(this.x + (this.facing === 1 ? this.w + 5 : -5), this.y + this.h * 0.45, this.facing));
+          this.attackCooldown = 18;
+          playSound('fork');
+        }
+      }
+      takeDamage(amount = 1) {
+        if (this.invulnerableTimer > 0) return;
+        this.hp -= amount;
+        this.invulnerableTimer = 60;
+        this.vy = -6;
+        this.vx = -this.facing * 5;
+        playSound('hit');
+        updateHUD();
+
+        floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 15, 'ОЙ БЛЯТЬ ГОРЯЧО!', '#ff4757'));
+
+        for (let i = 0; i < 15; i++) {
+          particles.push(new Particle(this.x + this.w/2, this.y + this.h/2, '#ff4757', (Math.random()-0.5)*8, (Math.random()-0.5)*8, 5));
+        }
+
+        if (this.hp <= 0) {
+          triggerGameOver();
+        }
+      }
+      update(platforms) {
+        if (this.invulnerableTimer > 0) this.invulnerableTimer--;
+        if (this.attackCooldown > 0) this.attackCooldown--;
+
+        // Horizontal Movement
+        if (keys.left) {
+          this.vx = -this.speed;
+          this.facing = -1;
+          this.animTimer++;
+        } else if (keys.right) {
+          this.vx = this.speed;
+          this.facing = 1;
+          this.animTimer++;
+        } else {
+          this.vx *= 0.7;
+          if (Math.abs(this.vx) < 0.2) this.vx = 0;
+          this.animTimer = 0;
+        }
+
+        // Apply gravity
+        this.vy += 0.55;
+        if (this.vy > 14) this.vy = 14;
+
+        // Move X
+        this.x += this.vx;
+        if (this.x < 10) this.x = 10;
+
+        // Platform collision horizontal
+        for (let plat of platforms) {
+          if (this.checkCollision(plat)) {
+            if (this.vx > 0) this.x = plat.x - this.w;
+            else if (this.vx < 0) this.x = plat.x + plat.w;
+            this.vx = 0;
+          }
+        }
+
+        // Move Y
+        this.y += this.vy;
+        this.isGrounded = false;
+
+        // Platform collision vertical
+        for (let plat of platforms) {
+          if (this.checkCollision(plat)) {
+            if (this.vy > 0 && (this.y + this.h - this.vy <= plat.y + 12)) {
+              this.y = plat.y - this.h;
+              this.vy = 0;
+              this.isGrounded = true;
+            } else if (this.vy < 0) {
+              this.y = plat.y + plat.h;
+              this.vy = 0;
+            }
+          }
+        }
+
+        // Fall out of bounds check
+        if (this.y > 600) {
+          this.takeDamage(3);
+        }
+      }
+      checkCollision(rect) {
+        return (
+          this.x < rect.x + rect.w &&
+          this.x + this.w > rect.x &&
+          this.y < rect.y + rect.h &&
+          this.y + this.h > rect.y
+        );
+      }
+      draw(c) {
+        c.save();
+        c.translate(this.x - cameraX, this.y);
+
+        // Flicker if hurt
+        if (this.invulnerableTimer > 0 && Math.floor(this.invulnerableTimer / 4) % 2 === 0) {
+          c.globalAlpha = 0.4;
+        }
+
+        if (this.facing === -1) {
+          c.scale(-1, 1);
+          c.translate(-this.w, 0);
+        }
+
+        const walkBob = (this.isGrounded && Math.abs(this.vx) > 0.5) ? Math.sin(this.animTimer * 0.3) * 3 : 0;
+
+        // --- DRAW MISHA BURKANIN ---
+        // Shadow
+        c.fillStyle = 'rgba(0,0,0,0.3)';
+        c.beginPath();
+        c.ellipse(this.w / 2, this.h, 16, 5, 0, 0, Math.PI * 2);
+        c.fill();
+
+        // Legs / Pants
+        c.fillStyle = '#2f3542';
+        const legOffset = (this.isGrounded && Math.abs(this.vx) > 0.5) ? Math.sin(this.animTimer * 0.3) * 6 : 0;
+        c.fillRect(8, 38 + walkBob, 7, 16 - legOffset);
+        c.fillRect(19, 38 + walkBob, 7, 16 + legOffset);
+        // Boots
+        c.fillStyle = '#747d8c';
+        c.fillRect(7, 52 + walkBob - Math.max(0, legOffset), 9, 4);
+        c.fillRect(18, 52 + walkBob + Math.max(0, legOffset), 9, 4);
+
+        // Body / Hipster Warm Sweater with Georgian diamond pattern
+        c.fillStyle = '#b33939';
+        c.fillRect(5, 20 + walkBob, 24, 20);
+        c.fillStyle = '#d2dae2';
+        // Diamonds on sweater
+        c.beginPath();
+        c.moveTo(17, 24 + walkBob);
+        c.lineTo(21, 28 + walkBob);
+        c.lineTo(17, 32 + walkBob);
+        c.lineTo(13, 28 + walkBob);
+        c.fill();
+
+        // Head / Skin
+        c.fillStyle = '#ffbe76';
+        c.fillRect(9, 6 + walkBob, 16, 15);
+
+        // Cool Hair / Beanie
+        c.fillStyle = '#1e272e';
+        c.fillRect(7, 2 + walkBob, 20, 7);
+
+        // Beard (Misha's signature stylish beard!)
+        c.fillStyle = '#4834d4'; // stylish dark indigo / brown
+        c.fillStyle = '#2c2c54';
+        c.fillRect(12, 14 + walkBob, 14, 8);
+        c.fillRect(14, 21 + walkBob, 10, 4);
+
+        // Glasses
+        c.strokeStyle = '#f9ca24';
+        c.lineWidth = 2;
+        c.strokeRect(17, 9 + walkBob, 6, 5);
+        c.beginPath();
+        c.moveTo(15, 11 + walkBob);
+        c.lineTo(17, 11 + walkBob);
+        c.stroke();
+
+        // Eye glint
+        c.fillStyle = '#fff';
+        c.fillRect(19, 10 + walkBob, 2, 2);
+
+        // Arms / Hands
+        c.fillStyle = '#b33939';
+        c.fillRect(1, 22 + walkBob, 5, 12);
+        // Right hand (holding mini fork or ready)
+        c.fillStyle = '#ffbe76';
+        c.fillRect(26, 26 + walkBob, 5, 5);
+
+        c.restore();
+      }
+    }
+
+    // Khinkali Enemy (Patrolling Dumpling)
+    class KhinkaliEnemy {
+      constructor(x, y, range = 130) {
+        this.startX = x;
+        this.x = x;
+        this.y = y;
+        this.w = 32;
+        this.h = 30;
+        this.range = range;
+        this.speed = 1.3;
+        this.dir = 1;
+        this.hp = 2;
+        this.steamTimer = 0;
+        this.jumpTimer = Math.random() * 60;
+        this.vy = 0;
+      }
+      update(platforms) {
+        // Patrol
+        this.x += this.speed * this.dir;
+        if (Math.abs(this.x - this.startX) > this.range) {
+          this.dir *= -1;
+        }
+
+        // Small hops
+        this.jumpTimer++;
+        if (this.jumpTimer > 100) {
+          this.vy = -4.5;
+          this.jumpTimer = 0;
+        }
+
+        this.vy += 0.4;
+        this.y += this.vy;
+
+        // Platform collision
+        for (let plat of platforms) {
+          if (
+            this.x < plat.x + plat.w &&
+            this.x + this.w > plat.x &&
+            this.y + this.h >= plat.y &&
+            this.y + this.h - this.vy <= plat.y + 10
+          ) {
+            this.y = plat.y - this.h;
+            this.vy = 0;
+          }
+        }
+
+        // Steam particle
+        this.steamTimer++;
+        if (this.steamTimer % 20 === 0) {
+          particles.push(new Particle(this.x + this.w/2, this.y, 'rgba(255,255,255,0.7)', (Math.random()-0.5), -1, 3, 30));
+        }
+      }
+      draw(c) {
+        c.save();
+        c.translate(this.x - cameraX, this.y);
+
+        // Dumpling base (dough body)
+        c.fillStyle = '#f5f6fa';
+        c.beginPath();
+        c.ellipse(this.w/2, this.h - 10, this.w/2, 11, 0, 0, Math.PI * 2);
+        c.fill();
+
+        // Pleats (складочки)
+        c.fillStyle = '#dcdde1';
+        c.beginPath();
+        c.moveTo(2, this.h - 10);
+        c.quadraticCurveTo(this.w/2, -4, this.w - 2, this.h - 10);
+        c.fill();
+
+        // Khinkali Knot / Top (хвостик)
+        c.fillStyle = '#f5f6fa';
+        c.beginPath();
+        c.arc(this.w/2, 3, 5, 0, Math.PI * 2);
+        c.fill();
+        c.fillStyle = '#c8d6e5';
+        c.fillRect(this.w/2 - 2, 4, 4, 6);
+
+        // Evil cute eyes
+        c.fillStyle = '#2f3542';
+        c.fillRect(this.dir > 0 ? 16 : 8, 12, 3, 4);
+        c.fillRect(this.dir > 0 ? 23 : 15, 12, 3, 4);
+        // Angry eyebrows
+        c.strokeStyle = '#eb4d4b';
+        c.lineWidth = 1.5;
+        c.beginPath();
+        if (this.dir > 0) {
+          c.moveTo(15, 10); c.lineTo(20, 13);
+          c.moveTo(26, 11); c.lineTo(22, 13);
+        } else {
+          c.moveTo(7, 11); c.lineTo(11, 13);
+          c.moveTo(18, 10); c.lineTo(14, 13);
+        }
+        c.stroke();
+
+        // Hot broth drop / tongue
+        c.fillStyle = '#ff7979';
+        c.fillRect(this.dir > 0 ? 20 : 11, 20, 3, 3);
+
+        c.restore();
+      }
+    }
+
+    // Collectible Cilantro (Kinza)
+    class Kinza {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.w = 20;
+        this.h = 20;
+        this.baseY = y;
+        this.timer = Math.random() * 10;
+        this.collected = false;
+      }
+      update() {
+        this.timer += 0.08;
+        this.y = this.baseY + Math.sin(this.timer) * 5;
+      }
+      draw(c) {
+        c.save();
+        c.translate(this.x - cameraX, this.y);
+        // Green Kinza leaf shape
+        c.fillStyle = '#2ed573';
+        c.beginPath();
+        c.arc(10, 8, 7, 0, Math.PI * 2);
+        c.arc(6, 14, 5, 0, Math.PI * 2);
+        c.arc(14, 14, 5, 0, Math.PI * 2);
+        c.fill();
+        c.fillStyle = '#26af5f';
+        c.fillRect(9, 14, 2, 7);
+        c.restore();
+      }
+    }
+
+    // THE BOSS: ЕБУЧИЙ ХИНКАЛИ
+    class BossKhinkali {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.w = 95;
+        this.h = 90;
+        this.hp = 18;
+        this.maxHp = 18;
+        this.vx = -2.5;
+        this.vy = 0;
+        this.state = 'IDLE'; // IDLE, JUMP, STEAM_ATTACK
+        this.timer = 0;
+        this.active = false;
+        this.defeated = false;
+      }
+      update(platforms) {
+        if (!this.active || this.defeated) return;
+
+        this.timer++;
+
+        // Phase behaviour
+        const isEnraged = this.hp <= this.maxHp / 2;
+        const jumpInterval = isEnraged ? 80 : 130;
+
+        if (this.timer % jumpInterval === 0) {
+          // Massive jump towards Misha
+          this.vy = isEnraged ? -14 : -11;
+          this.vx = player.x < this.x ? (isEnraged ? -4.5 : -3) : (isEnraged ? 4.5 : 3);
+          playSound('boss_steam');
+          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 15, isEnraged ? 'Я СВАРЮ ТЕБЯ!' : 'БУЛЬОН КИПИТ!', '#ff4757'));
+        }
+
+        // Broth spit attack
+        if (this.timer % 140 === 0 || (isEnraged && this.timer % 90 === 0)) {
+          const targetDir = player.x < this.x ? -1 : 1;
+          brothProjectiles.push(new BrothBlob(this.x + this.w/2, this.y + 35, targetDir * 5, -4));
+          brothProjectiles.push(new BrothBlob(this.x + this.w/2, this.y + 35, targetDir * 3.5, -6));
+          playSound('boss_steam');
+        }
+
+        // Apply physics
+        this.vy += 0.5;
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Arena boundary limit
+        if (this.x < 3100) { this.x = 3100; this.vx *= -1; }
+        if (this.x > 3700) { this.x = 3700; this.vx *= -1; }
+
+        // Platform collision
+        for (let plat of platforms) {
+          if (
+            this.x < plat.x + plat.w &&
+            this.x + this.w > plat.x &&
+            this.y + this.h >= plat.y &&
+            this.y + this.h - this.vy <= plat.y + 16
+          ) {
+            if (this.vy > 3) {
+              // Ground slam effect
+              for (let i = 0; i < 10; i++) {
+                particles.push(new Particle(this.x + Math.random()*this.w, plat.y, '#ffa502', (Math.random()-0.5)*7, -Math.random()*4, 4));
+              }
+            }
+            this.y = plat.y - this.h;
+            this.vy = 0;
+            this.vx *= 0.85;
+          }
+        }
+
+        // Steam particles
+        if (Math.random() < 0.4) {
+          particles.push(new Particle(this.x + this.w/2 + (Math.random()-0.5)*20, this.y, 'rgba(255, 230, 200, 0.8)', (Math.random()-0.5)*2, -2, 6, 40));
+        }
+
+        // Update Boss Health Bar
+        const fill = document.getElementById('boss-fill');
+        const pct = Math.max(0, (this.hp / this.maxHp) * 100);
+        fill.style.width = pct + '%';
+        if (isEnraged) {
+          document.getElementById('boss-label').textContent = '🔥 ЕБУЧИЙ ХИНКАЛИ (В ЯРОСТИ!) 🔥';
+        }
+      }
+      takeDamage(amount = 1) {
+        this.hp -= amount;
+        playSound('boss_hit');
+        floatingTexts.push(new FloatingText(this.x + this.w/2, this.y + 10, '-1 ВИЛКА!', '#ffa502'));
+        for (let i = 0; i < 8; i++) {
+          particles.push(new Particle(this.x + this.w/2, this.y + this.h/2, '#ff4757', (Math.random()-0.5)*9, (Math.random()-0.5)*9, 6));
+        }
+
+        if (this.hp <= 0) {
+          this.defeated = true;
+          this.active = false;
+          triggerVictory();
+        }
+      }
+      draw(c) {
+        c.save();
+        c.translate(this.x - cameraX, this.y);
+
+        // Steam aura glow
+        const glow = c.createRadialGradient(this.w/2, this.h/2, 20, this.w/2, this.h/2, 65);
+        glow.addColorStop(0, 'rgba(255, 71, 87, 0.25)');
+        glow.addColorStop(1, 'rgba(255, 71, 87, 0)');
+        c.fillStyle = glow;
+        c.fillRect(-20, -20, this.w + 40, this.h + 40);
+
+        // Huge Dough Body
+        c.fillStyle = '#f1f2f6';
+        c.beginPath();
+        c.ellipse(this.w/2, this.h - 26, this.w/2, 28, 0, 0, Math.PI * 2);
+        c.fill();
+
+        // Pleats
+        c.fillStyle = '#ced6e0';
+        c.beginPath();
+        c.moveTo(6, this.h - 26);
+        c.quadraticCurveTo(this.w/2, -10, this.w - 6, this.h - 26);
+        c.fill();
+
+        // Massive Top Knot / Tail (Хвостик)
+        c.fillStyle = '#f1f2f6';
+        c.beginPath();
+        c.arc(this.w/2, 10, 14, 0, Math.PI * 2);
+        c.fill();
+        c.fillStyle = '#a4b0be';
+        c.fillRect(this.w/2 - 6, 12, 12, 14);
+
+        // Black Pepper Specks on top
+        c.fillStyle = '#2f3542';
+        c.fillRect(this.w/2 - 12, 35, 3, 3);
+        c.fillRect(this.w/2 + 10, 42, 3, 3);
+        c.fillRect(this.w/2 - 4, 48, 3, 3);
+        c.fillRect(this.w/2 + 20, 36, 3, 3);
+
+        // Furious Glowing Eyes
+        c.fillStyle = '#ff4757';
+        c.beginPath();
+        c.arc(this.w/2 - 18, 42, 8, 0, Math.PI * 2);
+        c.arc(this.w/2 + 18, 42, 8, 0, Math.PI * 2);
+        c.fill();
+        c.fillStyle = '#ffffff';
+        c.fillRect(this.w/2 - 19, 41, 4, 4);
+        c.fillRect(this.w/2 + 17, 41, 4, 4);
+
+        // Angry Eyebrows
+        c.strokeStyle = '#2f3542';
+        c.lineWidth = 4;
+        c.beginPath();
+        c.moveTo(this.w/2 - 28, 32);
+        c.lineTo(this.w/2 - 8, 39);
+        c.moveTo(this.w/2 + 28, 32);
+        c.lineTo(this.w/2 + 8, 39);
+        c.stroke();
+
+        // Tooth / Open Mouth Spitting Steam
+        c.fillStyle = '#2f3542';
+        c.beginPath();
+        c.arc(this.w/2, 60, 12, 0, Math.PI);
+        c.fill();
+        // Sharp Dumpling Teeth
+        c.fillStyle = '#ffffff';
+        c.beginPath();
+        c.moveTo(this.w/2 - 8, 60); c.lineTo(this.w/2 - 4, 66); c.lineTo(this.w/2, 60);
+        c.moveTo(this.w/2, 60); c.lineTo(this.w/2 + 4, 66); c.lineTo(this.w/2 + 8, 60);
+        c.fill();
+
+        c.restore();
+      }
+    }
+
+    // World & Level Setup
+    const player = new Player();
+    let platforms = [];
+    let enemies = [];
+    let kinzas = [];
+    let boss = null;
+
+    function buildLevel() {
+      platforms = [
+        // Starting ground
+        { x: 0, y: 440, w: 750, h: 80, type: 'ground' },
+        { x: 300, y: 350, w: 120, h: 20, type: 'plat' },
+        { x: 480, y: 280, w: 140, h: 20, type: 'plat' },
+        { x: 680, y: 220, w: 130, h: 20, type: 'plat' },
+
+        // Mid section over hot broth pit
+        { x: 880, y: 440, w: 320, h: 80, type: 'ground' },
+        { x: 1260, y: 370, w: 110, h: 20, type: 'plat' },
+        { x: 1430, y: 310, w: 120, h: 20, type: 'plat' },
+        { x: 1620, y: 250, w: 130, h: 20, type: 'plat' },
+        { x: 1800, y: 340, w: 110, h: 20, type: 'plat' },
+
+        // Mountain stone terraces
+        { x: 1980, y: 440, w: 500, h: 80, type: 'ground' },
+        { x: 2150, y: 330, w: 140, h: 20, type: 'plat' },
+        { x: 2350, y: 240, w: 140, h: 20, type: 'plat' },
+        { x: 2580, y: 320, w: 150, h: 20, type: 'plat' },
+        { x: 2800, y: 220, w: 160, h: 20, type: 'plat' },
+
+        // Grand Boss Arena
+        { x: 3050, y: 440, w: 850, h: 80, type: 'ground' },
+        { x: 3030, y: 0, w: 30, h: 520, type: 'wall' }, // Arena Left Wall
+        { x: 3880, y: 0, w: 30, h: 520, type: 'wall' }, // Arena Right Wall
+        { x: 3200, y: 320, w: 120, h: 20, type: 'plat' },
+        { x: 3600, y: 320, w: 120, h: 20, type: 'plat' },
+        { x: 3400, y: 210, w: 140, h: 20, type: 'plat' },
+      ];
+
+      // Enemies
+      enemies = [
+        new KhinkaliEnemy(360, 410, 100),
+        new KhinkaliEnemy(500, 250, 50),
+        new KhinkaliEnemy(960, 410, 120),
+        new KhinkaliEnemy(1440, 280, 40),
+        new KhinkaliEnemy(2050, 410, 140),
+        new KhinkaliEnemy(2200, 300, 50),
+        new KhinkaliEnemy(2600, 290, 60),
+      ];
+
+      // Collectible Kinza leaves
+      kinzas = [
+        new Kinza(350, 310),
+        new Kinza(530, 240),
+        new Kinza(730, 180),
+        new Kinza(1000, 390),
+        new Kinza(1300, 330),
+        new Kinza(1480, 270),
+        new Kinza(1670, 210),
+        new Kinza(2200, 290),
+        new Kinza(2410, 200),
+        new Kinza(2860, 180),
+        new Kinza(3250, 280),
+        new Kinza(3650, 280),
+        new Kinza(3460, 170)
+      ];
+
+      // Boss
+      boss = new BossKhinkali(3480, 350);
+    }
+
+    function updateHUD() {
+      const hearts = '❤️'.repeat(Math.max(0, player.hp)) + '🖤'.repeat(Math.max(0, player.maxHp - player.hp));
+      document.getElementById('hud-hp').textContent = hearts;
+      document.getElementById('hud-score').textContent = score;
+    }
+
+    function startGame() {
+      player.reset();
+      score = 0;
+      forks = [];
+      brothProjectiles = [];
+      particles = [];
+      floatingTexts = [];
+      buildLevel();
+      updateHUD();
+
+      document.getElementById('start-screen').style.display = 'none';
+      document.getElementById('gameover-screen').style.display = 'none';
+      document.getElementById('victory-screen').style.display = 'none';
+      document.getElementById('boss-hud').style.display = 'none';
+
+      gameState = 'PLAYING';
+    }
+
+    function triggerGameOver() {
+      gameState = 'GAMEOVER';
+      document.getElementById('gameover-screen').style.display = 'flex';
+      playSound('hit');
+    }
+
+    function triggerVictory() {
+      gameState = 'WIN';
+      document.getElementById('victory-screen').style.display = 'flex';
+      document.getElementById('boss-hud').style.display = 'none';
+      playSound('win');
+    }
+
+    document.getElementById('btn-start').addEventListener('click', startGame);
+    document.getElementById('btn-restart').addEventListener('click', startGame);
+    document.getElementById('btn-win-restart').addEventListener('click', startGame);
+
+    /* --- Main Update Loop --- */
+    function update() {
+      if (gameState !== 'PLAYING') return;
+
+      player.update(platforms);
+
+      // Camera Tracking
+      const targetCamX = player.x - V_WIDTH * 0.35;
+      cameraX += (targetCamX - cameraX) * 0.1;
+      if (cameraX < 0) cameraX = 0;
+      if (cameraX > 3000) cameraX = 3000; // Locked in boss arena
+
+      // Boss activation check
+      if (player.x >= 3050 && !boss.active && !boss.defeated) {
+        boss.active = true;
+        document.getElementById('boss-hud').style.display = 'flex';
+        floatingTexts.push(new FloatingText(boss.x + boss.w/2, boss.y - 30, 'ЕБУЧИЙ ХИНКАЛИ ЗДЕСЬ!', '#ff4757'));
+        playSound('boss_steam');
+      }
+
+      // Update Enemies
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        e.update(platforms);
+
+        // Player stomp or touch enemy
+        if (
+          player.x < e.x + e.w &&
+          player.x + player.w > e.x &&
+          player.y < e.y + e.h &&
+          player.y + player.h > e.y
+        ) {
+          // Mario style stomp from above
+          if (player.vy > 0 && player.y + player.h - player.vy <= e.y + 12) {
+            player.vy = -8.5; // bounce
+            e.hp--;
+            playSound('fork');
+            floatingTexts.push(new FloatingText(e.x + e.w/2, e.y, 'РАЗДАВЛЕН!', '#ffa502'));
+            for (let p = 0; p < 8; p++) {
+              particles.push(new Particle(e.x + e.w/2, e.y + e.h/2, '#ced6e0', (Math.random()-0.5)*6, (Math.random()-0.5)*6, 4));
+            }
+            if (e.hp <= 0) {
+              enemies.splice(i, 1);
+              score += 100;
+              updateHUD();
+              continue;
+            }
+          } else {
+            // Player takes damage
+            player.takeDamage();
+          }
+        }
+      }
+
+      // Update Forks & Hit Check
+      for (let i = forks.length - 1; i >= 0; i--) {
+        const f = forks[i];
+        f.update();
+
+        let hit = false;
+        // Check hit enemies
+        for (let j = enemies.length - 1; j >= 0; j--) {
+          const en = enemies[j];
+          if (
+            f.x < en.x + en.w &&
+            f.x + f.w > en.x &&
+            f.y < en.y + en.h &&
+            f.y + f.h > en.y
+          ) {
+            en.hp--;
+            hit = true;
+            playSound('fork');
+            floatingTexts.push(new FloatingText(en.x + en.w/2, en.y, 'ВИЛКОЙ ЕГО!', '#70a1ff'));
+            if (en.hp <= 0) {
+              enemies.splice(j, 1);
+              score += 150;
+              updateHUD();
+            }
+            break;
+          }
+        }
+
+        // Check hit Boss
+        if (!hit && boss.active && !boss.defeated) {
+          if (
+            f.x < boss.x + boss.w &&
+            f.x + f.w > boss.x &&
+            f.y < boss.y + boss.h &&
+            f.y + f.h > boss.y
+          ) {
+            boss.takeDamage(1);
+            hit = true;
+          }
+        }
+
+        if (hit || f.life <= 0) {
+          forks.splice(i, 1);
+        }
+      }
+
+      // Update Boss
+      if (boss.active) {
+        boss.update(platforms);
+
+        // Boss collision with player
+        if (
+          player.x < boss.x + boss.w &&
+          player.x + player.w > boss.x &&
+          player.y < boss.y + boss.h &&
+          player.y + player.h > boss.y
+        ) {
+          player.takeDamage();
+        }
+      }
+
+      // Update Broth Projectiles
+      for (let i = brothProjectiles.length - 1; i >= 0; i--) {
+        const b = brothProjectiles[i];
+        b.update();
+
+        // Hit player
+        const dist = Math.hypot((player.x + player.w/2) - b.x, (player.y + player.h/2) - b.y);
+        if (dist < b.r + 16) {
+          player.takeDamage();
+          brothProjectiles.splice(i, 1);
+          continue;
+        }
+
+        if (b.y > 520 || b.life <= 0) {
+          brothProjectiles.splice(i, 1);
+        }
+      }
+
+      // Collect Kinza
+      for (let k of kinzas) {
+        if (!k.collected) {
+          k.update();
+          if (
+            player.x < k.x + k.w &&
+            player.x + player.w > k.x &&
+            player.y < k.y + k.h &&
+            player.y + player.h > k.y
+          ) {
+            k.collected = true;
+            score += 50;
+            playSound('coin');
+            updateHUD();
+            floatingTexts.push(new FloatingText(k.x + 10, k.y, '+50 КИНЗА', '#2ed573'));
+            for (let p = 0; p < 6; p++) {
+              particles.push(new Particle(k.x + 10, k.y + 10, '#2ed573', (Math.random()-0.5)*4, (Math.random()-0.5)*4, 3));
+            }
+          }
+        }
+      }
+
+      // Update Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        if (particles[i].life <= 0) particles.splice(i, 1);
+      }
+
+      // Update Floating Texts
+      for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        floatingTexts[i].update();
+        if (floatingTexts[i].life <= 0) floatingTexts.splice(i, 1);
+      }
+    }
+
+    /* --- Render Loop --- */
+    function draw() {
+      ctx.clearRect(0, 0, V_WIDTH, V_HEIGHT);
+
+      // 1. Parallax Caucasian Mountains Background
+      // Sky gradient
+      const sky = ctx.createLinearGradient(0, 0, 0, V_HEIGHT);
+      sky.addColorStop(0, '#130f1e');
+      sky.addColorStop(0.6, '#2d142c');
+      sky.addColorStop(1, '#511845');
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, V_WIDTH, V_HEIGHT);
+
+      // Moon
+      ctx.fillStyle = '#fffae6';
+      ctx.beginPath();
+      ctx.arc(780, 80, 36, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Far Mountains
+      ctx.fillStyle = '#1c1527';
+      ctx.beginPath();
+      ctx.moveTo(0, V_HEIGHT);
+      for (let x = 0; x <= V_WIDTH; x += 150) {
+        const peakY = 220 + Math.sin((x + cameraX * 0.1) * 0.008) * 80;
+        ctx.lineTo(x, peakY);
+      }
+      ctx.lineTo(V_WIDTH, V_HEIGHT);
+      ctx.fill();
+
+      // Near Mountains
+      ctx.fillStyle = '#2b1b36';
+      ctx.beginPath();
+      ctx.moveTo(0, V_HEIGHT);
+      for (let x = 0; x <= V_WIDTH; x += 120) {
+        const peakY = 320 + Math.cos((x + cameraX * 0.25) * 0.012) * 50;
+        ctx.lineTo(x, peakY);
+      }
+      ctx.lineTo(V_WIDTH, V_HEIGHT);
+      ctx.fill();
+
+      // 2. Boiling Hot Broth Hazards in pits
+      ctx.fillStyle = '#eb4d4b';
+      ctx.fillRect(0, 490, V_WIDTH, 30);
+      ctx.fillStyle = '#f0932b';
+      for (let x = 0; x < V_WIDTH; x += 35) {
+        ctx.beginPath();
+        ctx.arc(x + Math.sin(Date.now()*0.005 + x)*6, 495, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 3. Platforms
+      for (let plat of platforms) {
+        if (plat.x + plat.w < cameraX - 50 || plat.x > cameraX + V_WIDTH + 50) continue;
+
+        ctx.save();
+        ctx.translate(plat.x - cameraX, plat.y);
+
+        if (plat.type === 'ground') {
+          // Stone platform with grass / Caucasian ornament border
+          ctx.fillStyle = '#3a233c';
+          ctx.fillRect(0, 0, plat.w, plat.h);
+
+          // Top grass/moss layer
+          ctx.fillStyle = '#16a085';
+          ctx.fillRect(0, 0, plat.w, 8);
+
+          // Brick pattern
+          ctx.strokeStyle = '#29182b';
+          ctx.lineWidth = 1;
+          for (let bx = 0; bx < plat.w; bx += 40) {
+            ctx.beginPath();
+            ctx.moveTo(bx, 8);
+            ctx.lineTo(bx, plat.h);
+            ctx.stroke();
+          }
+        } else if (plat.type === 'plat') {
+          // Floating wooden/clay table board
+          ctx.fillStyle = '#d35400';
+          ctx.fillRect(0, 0, plat.w, plat.h);
+          ctx.fillStyle = '#e67e22';
+          ctx.fillRect(0, 0, plat.w, 4);
+
+          // Screws / rivets
+          ctx.fillStyle = '#f39c12';
+          ctx.fillRect(6, 7, 5, 5);
+          ctx.fillRect(plat.w - 11, 7, 5, 5);
+        } else if (plat.type === 'wall') {
+          // Arena boundaries
+          ctx.fillStyle = '#2c3e50';
+          ctx.fillRect(0, 0, plat.w, plat.h);
+          ctx.fillStyle = '#e74c3c';
+          ctx.fillRect(4, 0, 4, plat.h);
+        }
+        ctx.restore();
+      }
+
+      // 4. Collectibles
+      for (let k of kinzas) {
+        if (!k.collected) k.draw(ctx);
+      }
+
+      // 5. Enemies
+      for (let e of enemies) {
+        e.draw(ctx);
+      }
+
+      // 6. Boss
+      if (boss) {
+        boss.draw(ctx);
+      }
+
+      // 7. Player
+      player.draw(ctx);
+
+      // 8. Projectiles
+      for (let f of forks) f.draw(ctx);
+      for (let b of brothProjectiles) b.draw(ctx);
+
+      // 9. Particles
+      for (let p of particles) p.draw(ctx);
+
+      // 10. Floating Texts
+      for (let ft of floatingTexts) ft.draw(ctx);
+
+      // Level guidance signposts
+      if (cameraX < 300) {
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 13px Courier New, monospace';
+        ctx.fillText('➡ ИДИ ВПЕРЕД, МИША! ХИНКАЛИ БЛИЗКО!', 140 - cameraX, 390);
+      }
+      if (player.x > 2750 && player.x < 3050) {
+        ctx.fillStyle = '#ffa502';
+        ctx.font = 'bold 15px Courier New, monospace';
+        ctx.fillText('⚠ ВНИМАНИЕ: АРЕНА ЕБУЧЕГО ХИНКАЛИ ВПЕРЕДИ! ⚠', 2600 - cameraX, 160);
+      }
+    }
+
+    /* --- Game Loop --- */
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    buildLevel();
+    loop();
+  </script>
+</body>
+</html>

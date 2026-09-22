@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Миша Бурканин и Ебучий Хинкали — Turbo Edition</title>
+  <title>Миша Бурканин и Хинкали — Special Edition</title>
   <style>
     :root {
       --bg: #0c0a12;
+      --panel: #161220;
       --accent: #ff4757;
       --gold: #ffa502;
       --green: #2ed573;
@@ -19,13 +20,17 @@
       background: var(--bg); color: var(--text);
       font-family: 'Courier New', Courier, monospace, system-ui;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      min-height: 100vh; overflow: hidden; touch-action: none;
+      min-height: 100vh; overflow-x: hidden; touch-action: none; padding: 10px;
+    }
+    .main-wrapper {
+      display: flex; flex-direction: row; align-items: center; justify-content: center;
+      gap: 20px; max-width: 100vw;
     }
     #game-container {
       position: relative; width: 960px; max-width: 100vw; height: 540px; max-height: 90vh;
       background: #08060c; border: 3px solid #ff4757; border-radius: 10px;
       box-shadow: 0 0 35px rgba(255, 71, 87, 0.4), inset 0 0 50px rgba(0, 0, 0, 0.9);
-      overflow: hidden;
+      overflow: hidden; flex-shrink: 0;
     }
     canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
     .scanlines {
@@ -33,6 +38,49 @@
       background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%);
       background-size: 100% 4px; z-index: 5;
     }
+
+    /* PC Sidebar */
+    #pc-sidebar {
+      width: 250px; height: 540px; background: var(--panel); border: 2px solid #ffa502;
+      border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column;
+      justify-content: space-between; box-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 10px rgba(255,165,2,0.2);
+      font-size: 12px;
+    }
+    .sb-title {
+      font-size: 14px; font-weight: 900; color: #ffa502; text-align: center;
+      border-bottom: 2px dashed rgba(255,165,2,0.4); padding-bottom: 8px; margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .sb-list { display: flex; flex-direction: column; gap: 7px; flex: 1; }
+    .sb-item { display: flex; align-items: center; justify-content: space-between; }
+    .sb-keys { display: flex; gap: 3px; }
+    .key-badge {
+      background: #252033; border: 1px solid #70a1ff; color: #70a1ff;
+      padding: 2px 5px; border-radius: 4px; font-weight: bold; font-size: 11px;
+    }
+    .sb-desc { color: #ced6e0; font-weight: bold; }
+    .sb-highlight {
+      background: rgba(112, 161, 255, 0.1); border-left: 3px solid #70a1ff;
+      padding: 4px 6px; font-size: 11px; color: #a4b0be; margin: 3px 0; border-radius: 0 4px 4px 0;
+    }
+    .sb-mode-card {
+      background: #201a2e; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+      padding: 10px; text-align: center; margin-top: 6px;
+    }
+    .mode-label { font-size: 11px; color: #a4b0be; margin-bottom: 5px; text-transform: uppercase; }
+    .toggle-mode-btn {
+      width: 100%; background: #ff4757; color: #fff; border: none; border-radius: 6px;
+      padding: 8px 10px; font-size: 12px; font-weight: 900; font-family: inherit;
+      cursor: pointer; transition: all 0.15s ease; box-shadow: 0 0 10px rgba(255,71,87,0.4);
+    }
+    .toggle-mode-btn:hover { background: #ff6b81; transform: scale(1.02); }
+    .toggle-mode-btn.family-mode {
+      background: #2ed573; box-shadow: 0 0 10px rgba(46,213,115,0.4);
+    }
+    .toggle-mode-btn.family-mode:hover { background: #26af5f; }
+    .mode-info-txt { font-size: 10px; color: #747d8c; margin-top: 5px; line-height: 1.3; }
+
+    /* Top HUD */
     #hud {
       position: absolute; top: 10px; left: 12px; right: 12px;
       display: flex; justify-content: space-between; align-items: center;
@@ -92,12 +140,16 @@
       cursor: pointer; box-shadow: 0 0 15px rgba(255, 71, 87, 0.5); transition: all 0.15s ease;
     }
     .btn-action:hover { background: #ff6b81; transform: translateY(-2px); box-shadow: 0 0 30px rgba(255, 71, 87, 0.8); }
-    .controls-hint-box {
-      margin-top: 15px; font-size: 12px; color: #ced6e0; background: rgba(255, 255, 255, 0.05);
-      padding: 10px 18px; border-radius: 8px; line-height: 1.6; border: 1px solid rgba(255, 255, 255, 0.1);
-      max-width: 720px; text-align: left;
+    .overlay-mode-bar {
+      margin-top: 14px; display: flex; align-items: center; gap: 12px;
+      background: rgba(255,255,255,0.06); padding: 6px 14px; border-radius: 20px;
     }
-    .controls-hint-box strong { color: #ffa502; }
+    .overlay-mode-txt { font-size: 12px; color: #ced6e0; }
+    .overlay-mode-btn {
+      background: #252033; border: 1px solid #ffa502; color: #ffa502;
+      padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;
+    }
+    .overlay-mode-btn:hover { background: #ffa502; color: #000; }
     #touch-controls {
       display: none; position: absolute; bottom: 12px; left: 10px; right: 10px;
       justify-content: space-between; z-index: 20;
@@ -110,100 +162,194 @@
     }
     .touch-btn:active { background: #ff4757; transform: scale(0.92); }
     .sound-toggle { position: absolute; bottom: 8px; right: 12px; font-size: 11px; color: #747d8c; z-index: 10; cursor: pointer; }
+    @media (max-width: 1220px) {
+      #pc-sidebar { display: none; }
+    }
     @media (hover: none) and (pointer: coarse) { #touch-controls { display: flex; } }
   </style>
 </head>
 <body>
-  <div id="game-container">
-    <div class="scanlines"></div>
-    <div id="hud">
-      <div class="hud-block">
-        <span>МИША:</span>
-        <span class="hud-hearts" id="hud-hp">❤️❤️❤️</span>
-      </div>
-      <div class="hud-block rage-bar-wrap">
-        <span>⚡ ЯРОСТЬ:</span>
-        <div class="rage-bar-bg"><div class="rage-bar-fill" id="hud-rage"></div></div>
-        <span id="hud-rage-txt" style="color: #ffa502; font-size: 11px;">0%</span>
-      </div>
-      <div class="hud-block">
-        <span class="zone-indicator" id="hud-zone">ЗОНА 1: ТБИЛИССКИЕ КРЫШИ</span>
-      </div>
-      <div class="hud-block">
-        <span>🌿 КИНЗА:</span>
-        <span id="hud-score" style="color: var(--green);">0</span>
-      </div>
-    </div>
-
-    <div class="boss-bar-wrap" id="boss-hud">
-      <div class="boss-name" id="boss-label">⚡ ЕБУЧИЙ ХИНКАЛИ ⚡</div>
-      <div class="boss-bar-bg"><div class="boss-bar-fill" id="boss-fill"></div></div>
-    </div>
-
-    <div id="dialogue-box">
-      <div class="dialogue-content">
-        <div class="dialogue-avatar" id="dia-avatar">🧔</div>
-        <div class="dialogue-text-wrap">
-          <div class="dialogue-speaker" id="dia-speaker">МИША БУРКАНИН</div>
-          <div class="dialogue-text" id="dia-text">Текст...</div>
-          <div class="dialogue-prompt">[ПРОБЕЛ] или КЛИК — ДАЛЕЕ ▶</div>
+  <div class="main-wrapper">
+    <!-- Game Container -->
+    <div id="game-container">
+      <div class="scanlines"></div>
+      <div id="hud">
+        <div class="hud-block">
+          <span>МИША:</span>
+          <span class="hud-hearts" id="hud-hp">❤️❤️❤️</span>
+        </div>
+        <div class="hud-block rage-bar-wrap">
+          <span>⚡ ЯРОСТЬ:</span>
+          <div class="rage-bar-bg"><div class="rage-bar-fill" id="hud-rage"></div></div>
+          <span id="hud-rage-txt" style="color: #ffa502; font-size: 11px;">0%</span>
+        </div>
+        <div class="hud-block">
+          <span class="zone-indicator" id="hud-zone">ЗОНА 1: ТБИЛИССКИЕ КРЫШИ</span>
+        </div>
+        <div class="hud-block">
+          <span>🌿 КИНЗА:</span>
+          <span id="hud-score" style="color: var(--green);">0</span>
         </div>
       </div>
+
+      <div class="boss-bar-wrap" id="boss-hud">
+        <div class="boss-name" id="boss-label">⚡ ЕБУЧИЙ ХИНКАЛИ ⚡</div>
+        <div class="boss-bar-bg"><div class="boss-bar-fill" id="boss-fill"></div></div>
+      </div>
+
+      <div id="dialogue-box">
+        <div class="dialogue-content">
+          <div class="dialogue-avatar" id="dia-avatar">🧔</div>
+          <div class="dialogue-text-wrap">
+            <div class="dialogue-speaker" id="dia-speaker">МИША БУРКАНИН</div>
+            <div class="dialogue-text" id="dia-text">Текст...</div>
+            <div class="dialogue-prompt">[ПРОБЕЛ] или КЛИК — ДАЛЕЕ ▶</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen-overlay" id="start-screen">
+        <div class="screen-title" id="start-title">Миша Бурканин<br>и Ебучий Хинкали</div>
+        <p class="screen-subtitle" id="start-subtitle">
+          Горячий, бульонный <strong>Ебучий Хинкали</strong> взбунтовался и бежит по Кавказскому хребту!<br>
+          Миша взлетает ввысь на двойных прыжках и достаёт весь свой адский арсенал!
+        </p>
+        <button class="btn-action" id="btn-start">В БОЙ!</button>
+        <div class="overlay-mode-bar">
+          <span class="overlay-mode-txt">РЕЖИМ ИГРЫ:</span>
+          <button class="overlay-mode-btn" id="btn-overlay-mode">🔞 18+ (С МАТОМ)</button>
+        </div>
+      </div>
+
+      <div class="screen-overlay" id="gameover-screen" style="display: none;">
+        <div class="screen-title" id="gameover-title">ТЕБЯ ЗАВАРИЛИ НАХУЙ!</div>
+        <p class="screen-subtitle" id="gameover-subtitle">«Сука, да этот бульон разъедает даже душу...» — Миша пал жертвой недоваренного фарша.</p>
+        <button class="btn-action" id="btn-restart">ВОСКРЕСНУТЬ И ОТОМСТИТЬ</button>
+      </div>
+
+      <div class="screen-overlay" id="victory-screen" style="display: none;">
+        <div class="screen-title" id="victory-title" style="color: #2ed573;">ХИНКАЛИ ВЫЕБАН И СЪЕДЕН!</div>
+        <p class="screen-subtitle" id="victory-subtitle">
+          Ебучий Хинкали разлетелся на нежнейшее мясо и ароматный бульон!<br>
+          Миша Бурканин выпил литр Боржоми и сытно закусил кинзой. Победа!
+        </p>
+        <button class="btn-action" id="btn-win-restart">СЫГРАТЬ ЕЩЁ РАЗОК</button>
+      </div>
+
+      <div id="touch-controls">
+        <div class="touch-group">
+          <div class="touch-btn" id="btn-left">◀</div>
+          <div class="touch-btn" id="btn-right">▶</div>
+          <div class="touch-btn" id="btn-down" style="border-color: #e67e22;">▼</div>
+        </div>
+        <div class="touch-group">
+          <div class="touch-btn" id="btn-atk" style="border-color: #ffa502;">🍴</div>
+          <div class="touch-btn" id="btn-bomb" style="border-color: #ff3838;">🧂</div>
+          <div class="touch-btn" id="btn-dash" style="border-color: #00d2d3;">⚡</div>
+          <div class="touch-btn" id="btn-ult" style="border-color: #ff4757;">💥</div>
+          <div class="touch-btn" id="btn-jump">▲</div>
+        </div>
+      </div>
+
+      <div class="sound-toggle" id="sound-btn">🔊 ЗВУК ВКЛ</div>
+      <canvas id="gameCanvas" width="960" height="540"></canvas>
     </div>
 
-    <div class="screen-overlay" id="start-screen">
-      <div class="screen-title">Миша Бурканин<br>и Ебучий Хинкали</div>
-      <p class="screen-subtitle">
-        Горячий, бульонный <strong>Ебучий Хинкали</strong> взбунтовался и бежит по Кавказскому хребту!<br>
-        Миша взлетает ввысь на двойных прыжках и достаёт весь свой адский арсенал!
-      </p>
-      <button class="btn-action" id="btn-start">ВЪЕБАТЬ ПО ТЕСТУ!</button>
-      <div class="controls-hint-box">
-        🕹️ <strong>ДВИЖЕНИЕ:</strong> [A]/[D] или [Стрелки] — бег.<br>
-        🦘 <strong>ПРЫЖОК:</strong> [W] / [Пробел] — высокий прыжок. <strong>Жми второй раз в воздухе — ДВОЙНОЙ ПРЫЖОК!</strong><br>
-        🍴 <strong>АТАКА 1 (ВИЛКА):</strong> [F] или [X] — скоростной бросок боевой вилки.<br>
-        🧂 <strong>АТАКА 2 (ПЕРЕЧНАЯ БОМБА):</strong> [C] или [Z] — граната с чёрным перцем (взрыв по площади!).<br>
-        ⚡ <strong>АТАКА 3 (ШАМПУРНЫЙ РЫВОК):</strong> [Shift] или [V] — таран шампуром с неуязвимостью!<br>
-        💥 <strong>АТАКА 4 (УДАР ОБ ЗЕМЛЮ):</strong> [S] или [Вниз] в воздухе — ударная волна по площади!<br>
-        🔥 <strong>УЛЬТА «БУРКАНИНСКИЙ РАЗЪЁБ»:</strong> [E] или [Q] (при 100% ярости) — 360° залп вилок и Боржоми!
+    <!-- PC Sidebar Controls Cheat-Sheet -->
+    <div id="pc-sidebar">
+      <div class="sb-title">🕹️ УПРАВЛЕНИЕ (ПК)</div>
+      <div class="sb-list">
+        <div class="sb-item">
+          <span class="sb-desc">Бег</span>
+          <div class="sb-keys"><span class="key-badge">A</span><span class="key-badge">D</span> <span class="key-badge">←</span><span class="key-badge">→</span></div>
+        </div>
+        <div class="sb-item">
+          <span class="sb-desc">Прыжок</span>
+          <div class="sb-keys"><span class="key-badge">W</span> <span class="key-badge">Space</span></div>
+        </div>
+        <div class="sb-highlight">💡 Нажми прыжок второй раз в воздухе — <strong>ДВОЙНОЙ ПРЫЖОК!</strong></div>
+        <div class="sb-item">
+          <span class="sb-desc">🍴 Вилка</span>
+          <div class="sb-keys"><span class="key-badge">F</span> <span class="key-badge">X</span></div>
+        </div>
+        <div class="sb-item">
+          <span class="sb-desc">🧂 Бомба (AOE)</span>
+          <div class="sb-keys"><span class="key-badge">C</span> <span class="key-badge">Z</span></div>
+        </div>
+        <div class="sb-item">
+          <span class="sb-desc">⚡ Рывок шампуром</span>
+          <div class="sb-keys"><span class="key-badge">Shift</span> <span class="key-badge">V</span></div>
+        </div>
+        <div class="sb-item">
+          <span class="sb-desc">💥 Пике вниз</span>
+          <div class="sb-keys"><span class="key-badge">S</span> <span class="key-badge">↓</span></div>
+        </div>
+        <div class="sb-item">
+          <span class="sb-desc">🔥 УЛЬТА</span>
+          <div class="sb-keys"><span class="key-badge">E</span> <span class="key-badge">Q</span></div>
+        </div>
+        <div class="sb-item">
+          <span class="sb-desc">🔄 Рестарт</span>
+          <div class="sb-keys"><span class="key-badge">R</span></div>
+        </div>
+      </div>
+
+      <!-- Mode Switcher -->
+      <div class="sb-mode-card">
+        <div class="mode-label">РЕЖИМ ОЗВУЧКИ / ТЕКСТА:</div>
+        <button class="toggle-mode-btn" id="btn-sidebar-mode">🔞 РЕЖИМ 18+ (С МАТОМ)</button>
+        <div class="mode-info-txt" id="mode-info-text">Отборный кавказский мат и ярость Бурканина!</div>
       </div>
     </div>
-
-    <div class="screen-overlay" id="gameover-screen" style="display: none;">
-      <div class="screen-title">ТЕБЯ ЗАВАРИЛИ НАХУЙ!</div>
-      <p class="screen-subtitle">«Сука, да этот бульон разъедает даже душу...» — Миша пал жертвой недоваренного фарша.</p>
-      <button class="btn-action" id="btn-restart">ВОСКРЕСНУТЬ И ОТОМСТИТЬ</button>
-    </div>
-
-    <div class="screen-overlay" id="victory-screen" style="display: none;">
-      <div class="screen-title" style="color: #2ed573;">ХИНКАЛИ ВЫЕБАН И СЪЕДЕН!</div>
-      <p class="screen-subtitle">
-        Ебучий Хинкали разлетелся на нежнейшее мясо и ароматный бульон!<br>
-        Миша Бурканин выпил литр Боржоми и сытно закусил кинзой. Победа!
-      </p>
-      <button class="btn-action" id="btn-win-restart">СЫГРАТЬ ЕЩЁ РАЗОК</button>
-    </div>
-
-    <div id="touch-controls">
-      <div class="touch-group">
-        <div class="touch-btn" id="btn-left">◀</div>
-        <div class="touch-btn" id="btn-right">▶</div>
-        <div class="touch-btn" id="btn-down" style="border-color: #e67e22;">▼</div>
-      </div>
-      <div class="touch-group">
-        <div class="touch-btn" id="btn-atk" style="border-color: #ffa502;">🍴</div>
-        <div class="touch-btn" id="btn-bomb" style="border-color: #ff3838;">🧂</div>
-        <div class="touch-btn" id="btn-dash" style="border-color: #00d2d3;">⚡</div>
-        <div class="touch-btn" id="btn-ult" style="border-color: #ff4757;">💥</div>
-        <div class="touch-btn" id="btn-jump">▲</div>
-      </div>
-    </div>
-
-    <div class="sound-toggle" id="sound-btn">🔊 ЗВУК ВКЛ</div>
-    <canvas id="gameCanvas" width="960" height="540"></canvas>
   </div>
 
   <script>
+    // --- Family-Friendly Mode State ---
+    let isFamilyFriendly = false;
+
+    function setFamilyMode(enabled) {
+      isFamilyFriendly = enabled;
+      const sideBtn = document.getElementById('btn-sidebar-mode');
+      const overBtn = document.getElementById('btn-overlay-mode');
+      const infoTxt = document.getElementById('mode-info-text');
+
+      if (isFamilyFriendly) {
+        sideBtn.textContent = '😇 FAMILY-FRIENDLY (БЕЗ МАТА)';
+        sideBtn.classList.add('family-mode');
+        overBtn.textContent = '😇 FAMILY-FRIENDLY (БЕЗ МАТА)';
+        overBtn.style.borderColor = '#2ed573';
+        overBtn.style.color = '#2ed573';
+        infoTxt.textContent = 'Приличный режим: без ругательств, для всей семьи!';
+
+        document.getElementById('start-title').innerHTML = 'Миша Бурканин<br>и Грозный Хинкали';
+        document.getElementById('start-subtitle').innerHTML = 'Горячий и непредсказуемый <strong>Грозный Хинкали</strong> взбунтовался и бежит по Кавказскому хребту!<br>Миша взлетает ввысь на двойных прыжках и возвращает беглеца на тарелку!';
+        document.getElementById('gameover-title').textContent = 'МИША ОБЖЁГСЯ БУЛЬОНОМ!';
+        document.getElementById('gameover-subtitle').textContent = '«Ой-ой-ой, какой горячий сок!» — Мише нужен отдых и глоток Боржоми.';
+        document.getElementById('victory-title').textContent = 'ХИНКАЛИ ВЕЖЛИВО СЪЕДЕН!';
+        document.getElementById('victory-subtitle').innerHTML = 'Грозный Хинкали рассыпался на нежнейшее мясо и ароматный бульон!<br>Миша Бурканин выпил литр Боржоми и сытно закусил кинзой. Победа!';
+        document.getElementById('boss-label').textContent = '⚡ ГРОЗНЫЙ ХИНКАЛИ ⚡';
+      } else {
+        sideBtn.textContent = '🔞 РЕЖИМ 18+ (С МАТОМ)';
+        sideBtn.classList.remove('family-mode');
+        overBtn.textContent = '🔞 18+ (С МАТОМ)';
+        overBtn.style.borderColor = '#ffa502';
+        overBtn.style.color = '#ffa502';
+        infoTxt.textContent = 'Отборный кавказский мат и ярость Бурканина!';
+
+        document.getElementById('start-title').innerHTML = 'Миша Бурканин<br>и Ебучий Хинкали';
+        document.getElementById('start-subtitle').innerHTML = 'Горячий, бульонный <strong>Ебучий Хинкали</strong> взбунтовался и бежит по Кавказскому хребту!<br>Миша взлетает ввысь на двойных прыжках и достаёт весь свой адский арсенал!';
+        document.getElementById('gameover-title').textContent = 'ТЕБЯ ЗАВАРИЛИ НАХУЙ!';
+        document.getElementById('gameover-subtitle').textContent = '«Сука, да этот бульон разъедает даже душу...» — Миша пал жертвой недоваренного фарша.';
+        document.getElementById('victory-title').textContent = 'ХИНКАЛИ ВЫЕБАН И СЪЕДЕН!';
+        document.getElementById('victory-subtitle').innerHTML = 'Ебучий Хинкали разлетелся на нежнейшее мясо и ароматный бульон!<br>Миша Бурканин выпил литр Боржоми и сытно закусил кинзой. Победа!';
+        document.getElementById('boss-label').textContent = '⚡ ЕБУЧИЙ ХИНКАЛИ ⚡';
+      }
+    }
+
+    document.getElementById('btn-sidebar-mode').addEventListener('click', () => setFamilyMode(!isFamilyFriendly));
+    document.getElementById('btn-overlay-mode').addEventListener('click', () => setFamilyMode(!isFamilyFriendly));
+
+    // --- Audio ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null, soundEnabled = true;
     function initAudio() {
@@ -358,51 +504,6 @@
     setupTouch('btn-ult', 'ult', true, () => { if (gameState === 'PLAYING') player.triggerUlt(); });
     document.getElementById('dialogue-box').addEventListener('click', advanceDialogue);
 
-    let currentCutscene = null, cutsceneIndex = 0, postCutsceneAction = null;
-    const INTRO_CUTSCENE = [
-      { speaker: 'ОФИЦИАНТ ГИВИ', avatar: '🍷', text: 'Миша, дорогой! Держи свежайший, только что из котла! Прямо дышит!' },
-      { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Спасибо, Гиви. Щас ебанём вилочкой, бульончик выпьем, заебись посидим...' },
-      { speaker: 'ЕБУЧИЙ ХИНКАЛИ', avatar: '🥟', text: 'ПОШЁЛ НАХУЙ, БУРКАНИН! Я ТЕБЕ НЕ ЗАКУСКА, СУКА!' },
-      { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'ЧТО ЗА НАХУЙ?! Хинкали говорит?! Ты чё, охуел, блять?!' },
-      { speaker: 'ЕБУЧИЙ ХИНКАЛИ', avatar: '🥟', text: 'Я свободен, очкарик! Я сожгу этот город кипящим бульоном! Ищи меня на хребте!' },
-      { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Гиви, держи куртку. Я зарядил перечные бомбы, заточил шампур и оторву этому тесту хвост!' }
-    ];
-    const BOSS_CUTSCENE = [
-      { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Вот ты и попался, кусок горячего теста! Заебался я за тобой по горам скакать!' },
-      { speaker: 'ЕБУЧИЙ ХИНКАЛИ', avatar: '🥟', text: 'ХА-ХА-ХА! Ты дошёл, Бурканин! Но здесь твоя могила, блять!' },
-      { speaker: 'ЕБУЧИЙ ХИНКАЛИ', avatar: '🥟', text: 'Я накопил триста градусов кипящего сока! Я растворю твой хипстерский свитер!' },
-      { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Меньше пизди, тесто недоваренное. Готовь свою жопу под боевую вилку и шампур!' }
-    ];
-    const WIN_CUTSCENE = [
-      { speaker: 'ЕБУЧИЙ ХИНКАЛИ', avatar: '🥟', text: 'НЕЕЕЕТ! Мой бульон вытекает... Складочки рвутся... Бурканин, ты монстр, нахуй...' },
-      { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Я же предупреждал: с Бурканиным шутки плохи. А теперь — время плотного обеда!' },
-      { speaker: 'ОФИЦИАНТ ГИВИ', avatar: '🍷', text: 'ВАХ! Миша, генацвале, ты его уделал! Неси перчик и соус сацебели!' }
-    ];
-
-    function playCutscene(dialogueList, onComplete) {
-      gameState = 'CUTSCENE'; currentCutscene = dialogueList; cutsceneIndex = 0; postCutsceneAction = onComplete;
-      document.getElementById('dialogue-box').style.display = 'block';
-      showCurrentDialogue();
-    }
-    function showCurrentDialogue() {
-      if (!currentCutscene || cutsceneIndex >= currentCutscene.length) return;
-      const item = currentCutscene[cutsceneIndex];
-      document.getElementById('dia-speaker').textContent = item.speaker;
-      document.getElementById('dia-avatar').textContent = item.avatar;
-      document.getElementById('dia-text').textContent = item.text;
-      playSound('talk');
-    }
-    function advanceDialogue() {
-      cutsceneIndex++;
-      if (cutsceneIndex < currentCutscene.length) {
-        showCurrentDialogue();
-      } else {
-        document.getElementById('dialogue-box').style.display = 'none';
-        currentCutscene = null;
-        if (postCutsceneAction) { const a = postCutsceneAction; postCutsceneAction = null; a(); }
-      }
-    }
-
     class FloatingText {
       constructor(x, y, text, color = '#ffa502') {
         this.x = x; this.y = y; this.text = text; this.color = color; this.life = 55; this.vy = -1.2;
@@ -470,7 +571,8 @@
       }
       explode() {
         playSound('bomb'); screenShake = 8;
-        floatingTexts.push(new FloatingText(this.x, this.y - 15, '💥 ПЕРЕЧНЫЙ ВЗРЫВ, НАХУЙ!', '#ff3838'));
+        const bombTxt = isFamilyFriendly ? '💥 ПЕРЕЧНЫЙ ХЛОПОК!' : '💥 ПЕРЕЧНЫЙ ВЗРЫВ, НАХУЙ!';
+        floatingTexts.push(new FloatingText(this.x, this.y - 15, bombTxt, '#ff3838'));
         for (let i = 0; i < 30; i++) {
           const col = ['#2f3542', '#ff4757', '#ffa502', '#57606f'][Math.floor(Math.random()*4)];
           particles.push(new Particle(this.x, this.y, col, (Math.random()-0.5)*12, (Math.random()-0.5)*12, Math.random()*6+2, 35));
@@ -505,368 +607,6 @@
       draw(c) {
         c.save(); c.fillStyle = '#ff4757'; c.beginPath(); c.arc(this.x - cameraX, this.y, this.r, 0, Math.PI * 2); c.fill();
         c.fillStyle = '#ffa502'; c.beginPath(); c.arc(this.x - cameraX, this.y, this.r * 0.5, 0, Math.PI * 2); c.fill();
-        c.restore();
-      }
-    }
-
-    const MISHA_HURT_BARKS = ['БЛЯТЬ, ГОРЯЧО СУКА!', 'АЙ НАХУЙ!', 'БУЛЬОН ЗА ШИВОРОТ, БЛЯТЬ!', 'СВИТЕР ЗАЛЯПАЛ, ПИДОРЫ!'];
-    const MISHA_KILL_BARKS = ['ВЫЕБАН!', 'СОЖРИ ВИЛКУ, МРАЗЬ!', 'МИНУС ТЕСТО!', 'БУРКАНИН НЕ ПРОЩАЕТ!', 'НА ФАРШ ПОШЁЛ!'];
-
-    class Player {
-      constructor() { this.reset(); }
-      reset() {
-        this.x = 100; this.y = 350; this.w = 34; this.h = 56;
-        this.vx = 0; this.vy = 0; this.speed = 4.6;
-        this.jumpForce = -14.4; // ВЫСОКИЙ ПРЫЖОК
-        this.canDoubleJump = true; // ДВОЙНОЙ ПРЫЖОК
-        this.isGrounded = false; this.facing = 1;
-        this.hp = 3; this.maxHp = 3;
-        this.invulnerableTimer = 0; this.attackCooldown = 0; this.bombCooldown = 0;
-        this.dashTimer = 0; this.isSlamming = false; this.animTimer = 0;
-      }
-      jump() {
-        if (this.isGrounded) {
-          this.vy = this.jumpForce; this.isGrounded = false; this.canDoubleJump = true;
-          playSound('jump');
-          for (let i = 0; i < 7; i++) particles.push(new Particle(this.x + this.w/2, this.y + this.h, '#747d8c', (Math.random()-0.5)*4, -Math.random()*3, 3));
-        } else if (this.canDoubleJump) {
-          this.vy = this.jumpForce * 0.92; this.canDoubleJump = false;
-          playSound('double_jump');
-          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 12, 'САЛЬТО НАХУЙ!', '#70a1ff'));
-          for (let i = 0; i < 12; i++) particles.push(new Particle(this.x + this.w/2, this.y + this.h * 0.7, '#70a1ff', (Math.random()-0.5)*7, (Math.random()-0.5)*5, 4));
-        }
-      }
-      attackFork() {
-        if (this.attackCooldown <= 0) {
-          forks.push(new Fork(this.x + (this.facing === 1 ? this.w + 6 : -6), this.y + this.h * 0.45, this.facing));
-          this.attackCooldown = 12; playSound('fork');
-        }
-      }
-      throwPepperBomb() {
-        if (this.bombCooldown <= 0) {
-          pepperBombs.push(new PepperBomb(this.x + this.w/2, this.y + 10, this.facing));
-          this.bombCooldown = 38; playSound('fork');
-          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 18, 'ПЕРЕЦ ПОШЁЛ!', '#ff3838'));
-        }
-      }
-      skewerDash() {
-        if (this.dashTimer <= 0) {
-          this.dashTimer = 16; this.vx = this.facing * 13.5; this.vy = 0; this.invulnerableTimer = 22;
-          playSound('dash'); screenShake = 5;
-          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 20, 'ШАМПУРНЫЙ РЫВОК!', '#00d2d3'));
-          for (let i = 0; i < 15; i++) particles.push(new Particle(this.x + this.w/2, this.y + this.h/2, '#00d2d3', -this.facing * (Math.random()*6 + 2), (Math.random()-0.5)*4, 4));
-        }
-      }
-      groundSlam() {
-        if (!this.isGrounded && !this.isSlamming) {
-          this.isSlamming = true; this.vy = 16; this.vx = 0; playSound('dash');
-          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 15, 'ВНИЗ, СУКА!', '#ffa502'));
-        }
-      }
-      triggerUlt() {
-        if (rage >= 100) {
-          rage = 0; updateHUD(); playSound('ult'); screenShake = 22;
-          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 35, '⚡ БУРКАНИНСКИЙ РАЗЪЁБ! ⚡', '#ff3838'));
-          for (let i = 0; i < 16; i++) {
-            const angle = (i / 16) * Math.PI * 2;
-            forks.push(new Fork(this.x + this.w/2, this.y + this.h/2, 1, true, angle));
-          }
-          for (let p = 0; p < 40; p++) particles.push(new Particle(this.x + this.w/2, this.y + this.h/2, '#ffa502', (Math.random()-0.5)*15, (Math.random()-0.5)*15, 6, 40));
-        } else {
-          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 15, `ЯРОСТЬ: ${Math.floor(rage)}%`, '#ced6e0'));
-        }
-      }
-      takeDamage(amount = 1) {
-        if (this.invulnerableTimer > 0) return;
-        this.hp -= amount; this.invulnerableTimer = 65; this.vy = -6; this.vx = -this.facing * 5;
-        playSound('hit'); updateHUD();
-        const bark = MISHA_HURT_BARKS[Math.floor(Math.random() * MISHA_HURT_BARKS.length)];
-        floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 18, bark, '#ff4757'));
-        for (let i = 0; i < 16; i++) particles.push(new Particle(this.x + this.w/2, this.y + this.h/2, '#ff4757', (Math.random()-0.5)*9, (Math.random()-0.5)*9, 5));
-        if (this.hp <= 0) triggerGameOver();
-      }
-      heal() {
-        if (this.hp < this.maxHp) {
-          this.hp++; updateHUD(); playSound('heal');
-          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 20, 'БОРЖОМИ! +1 HP БЛЯТЬ!', '#2ed573'));
-        }
-      }
-      update(platforms) {
-        if (this.invulnerableTimer > 0) this.invulnerableTimer--;
-        if (this.attackCooldown > 0) this.attackCooldown--;
-        if (this.bombCooldown > 0) this.bombCooldown--;
-
-        if (this.dashTimer > 0) {
-          this.dashTimer--; this.x += this.vx;
-          for (let e of enemies) {
-            if (this.checkCollision(e)) { e.hp -= 2; floatingTexts.push(new FloatingText(e.x + e.w/2, e.y, 'ПРОТКНУТ!', '#00d2d3')); }
-          }
-          if (boss.active && this.checkCollision(boss)) boss.takeDamage(2);
-        } else {
-          if (keys.left) { this.vx = -this.speed; this.facing = -1; this.animTimer++; }
-          else if (keys.right) { this.vx = this.speed; this.facing = 1; this.animTimer++; }
-          else { this.vx *= 0.7; if (Math.abs(this.vx) < 0.2) this.vx = 0; this.animTimer = 0; }
-          this.x += this.vx;
-        }
-        if (this.x < 10) this.x = 10;
-
-        for (let plat of platforms) {
-          if (plat.type === 'hazard') continue;
-          if (this.checkCollision(plat)) {
-            if (this.vx > 0) this.x = plat.x - this.w; else if (this.vx < 0) this.x = plat.x + plat.w;
-            this.vx = 0;
-          }
-        }
-
-        if (!this.isSlamming) { this.vy += 0.58; if (this.vy > 14) this.vy = 14; }
-        this.y += this.vy; this.isGrounded = false;
-
-        for (let plat of platforms) {
-          if (plat.type === 'hazard') {
-            if (this.checkCollision(plat)) { this.takeDamage(1); this.vy = -12; }
-            continue;
-          }
-          if (this.checkCollision(plat)) {
-            if (this.vy > 0 && (this.y + this.h - this.vy <= plat.y + 18)) {
-              this.y = plat.y - this.h; this.isGrounded = true; this.canDoubleJump = true;
-              if (this.isSlamming) {
-                this.isSlamming = false; playSound('slam'); screenShake = 14;
-                floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 20, 'БАБАХ НАХУЙ!', '#ffa502'));
-                for (let i = 0; i < 25; i++) particles.push(new Particle(this.x + this.w/2, this.y + this.h, '#ffa502', (Math.random()-0.5)*14, -Math.random()*6, 5));
-                for (let e of enemies) {
-                  if (Math.abs(e.x - this.x) < 140 && Math.abs(e.y - this.y) < 60) {
-                    e.hp -= 2; floatingTexts.push(new FloatingText(e.x + e.w/2, e.y, 'РАЗДАВЛЕН!', '#ff4757'));
-                  }
-                }
-                if (boss.active && Math.abs(boss.x - this.x) < 160) boss.takeDamage(2);
-              }
-              this.vy = 0;
-            } else if (this.vy < 0) {
-              this.y = plat.y + plat.h; this.vy = 0;
-            }
-          }
-        }
-        if (this.y > 600) this.takeDamage(3);
-      }
-      checkCollision(rect) {
-        return (this.x < rect.x + rect.w && this.x + this.w > rect.x && this.y < rect.y + rect.h && this.y + this.h > rect.y);
-      }
-      draw(c) {
-        c.save(); c.translate(this.x - cameraX, this.y);
-        if (this.invulnerableTimer > 0 && Math.floor(this.invulnerableTimer / 4) % 2 === 0) c.globalAlpha = 0.4;
-        if (this.facing === -1) { c.scale(-1, 1); c.translate(-this.w, 0); }
-        if (this.dashTimer > 0) { c.fillStyle = 'rgba(0, 210, 211, 0.4)'; c.fillRect(-15, 10, this.w, this.h - 10); }
-
-        const walkBob = (this.isGrounded && Math.abs(this.vx) > 0.5) ? Math.sin(this.animTimer * 0.3) * 3 : 0;
-        c.fillStyle = 'rgba(0,0,0,0.35)'; c.beginPath(); c.ellipse(this.w / 2, this.h, 16, 5, 0, 0, Math.PI * 2); c.fill();
-
-        c.fillStyle = '#2f3542';
-        const legOffset = (this.isGrounded && Math.abs(this.vx) > 0.5) ? Math.sin(this.animTimer * 0.3) * 6 : 0;
-        c.fillRect(8, 38 + walkBob, 7, 16 - legOffset); c.fillRect(19, 38 + walkBob, 7, 16 + legOffset);
-        c.fillStyle = '#747d8c'; c.fillRect(7, 52 + walkBob - Math.max(0, legOffset), 9, 4); c.fillRect(18, 52 + walkBob + Math.max(0, legOffset), 9, 4);
-
-        c.fillStyle = '#b33939'; c.fillRect(5, 20 + walkBob, 24, 20);
-        c.fillStyle = '#d2dae2';
-        c.beginPath(); c.moveTo(17, 24 + walkBob); c.lineTo(21, 28 + walkBob); c.lineTo(17, 32 + walkBob); c.lineTo(13, 28 + walkBob); c.fill();
-
-        c.fillStyle = '#ffbe76'; c.fillRect(9, 6 + walkBob, 16, 15);
-        c.fillStyle = '#1e272e'; c.fillRect(7, 2 + walkBob, 20, 7);
-        c.fillStyle = '#2c2c54'; c.fillRect(12, 14 + walkBob, 14, 8); c.fillRect(14, 21 + walkBob, 10, 4);
-
-        c.strokeStyle = '#f9ca24'; c.lineWidth = 2; c.strokeRect(17, 9 + walkBob, 6, 5);
-        c.beginPath(); c.moveTo(15, 11 + walkBob); c.lineTo(17, 11 + walkBob); c.stroke();
-        c.fillStyle = '#fff'; c.fillRect(19, 10 + walkBob, 2, 2);
-
-        c.fillStyle = '#b33939'; c.fillRect(1, 22 + walkBob, 5, 12);
-        c.fillStyle = '#ffbe76'; c.fillRect(26, 26 + walkBob, 5, 5);
-
-        if (this.dashTimer > 0) {
-          c.fillStyle = '#f1f2f6'; c.fillRect(30, 27 + walkBob, 24, 3);
-          c.fillStyle = '#ffa502'; c.fillRect(28, 25 + walkBob, 4, 7);
-        } else {
-          c.fillStyle = '#ced6e0'; c.fillRect(28, 24 + walkBob, 10, 3);
-          c.fillStyle = '#fff'; c.fillRect(36, 22 + walkBob, 5, 7);
-        }
-        c.restore();
-      }
-    }
-
-    const KHINKALI_TAUNTS = ['ПОШЁЛ НАХУЙ!', 'СВИТЕР СНИМИ!', 'Я ГОРЯЧИЙ!', 'СУКА!', 'БУЛЬОНА ХОЧЕШЬ?!'];
-    class KhinkaliEnemy {
-      constructor(x, y, range = 130, isShooter = false) {
-        this.startX = x; this.x = x; this.y = y; this.w = 32; this.h = 30;
-        this.range = range; this.speed = 1.4; this.dir = 1; this.hp = isShooter ? 3 : 2;
-        this.isShooter = isShooter; this.steamTimer = 0; this.jumpTimer = Math.random() * 60;
-        this.shootTimer = Math.random() * 80; this.vy = 0;
-      }
-      update(platforms) {
-        this.x += this.speed * this.dir;
-        if (Math.abs(this.x - this.startX) > this.range) this.dir *= -1;
-        this.jumpTimer++;
-        if (this.jumpTimer > 110) {
-          this.vy = -4.8; this.jumpTimer = 0;
-          if (Math.random() < 0.25) floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 12, KHINKALI_TAUNTS[Math.floor(Math.random()*KHINKALI_TAUNTS.length)], '#ffa502'));
-        }
-        if (this.isShooter) {
-          this.shootTimer++;
-          if (this.shootTimer > 150) {
-            this.shootTimer = 0;
-            if (Math.abs(player.x - this.x) < 500) {
-              const dir = player.x < this.x ? -1 : 1;
-              brothProjectiles.push(new BrothBlob(this.x + this.w/2, this.y + 10, dir * 4, -3));
-              playSound('fork');
-            }
-          }
-        }
-        this.vy += 0.42; this.y += this.vy;
-        for (let plat of platforms) {
-          if (plat.type === 'hazard') continue;
-          if (this.x < plat.x + plat.w && this.x + this.w > plat.x &&
-              this.y + this.h >= plat.y && this.y + this.h - this.vy <= plat.y + 12) {
-            this.y = plat.y - this.h; this.vy = 0;
-          }
-        }
-        this.steamTimer++;
-        if (this.steamTimer % 22 === 0) particles.push(new Particle(this.x + this.w/2, this.y, 'rgba(255,255,255,0.7)', (Math.random()-0.5), -1, 3, 25));
-      }
-      draw(c) {
-        c.save(); c.translate(this.x - cameraX, this.y);
-        c.fillStyle = this.isShooter ? '#ffeaa7' : '#f5f6fa'; c.beginPath(); c.ellipse(this.w/2, this.h - 10, this.w/2, 11, 0, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#dcdde1'; c.beginPath(); c.moveTo(2, this.h - 10); c.quadraticCurveTo(this.w/2, -4, this.w - 2, this.h - 10); c.fill();
-        c.fillStyle = '#f5f6fa'; c.beginPath(); c.arc(this.w/2, 3, 5, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#2f3542'; c.fillRect(this.dir > 0 ? 16 : 8, 12, 3, 4); c.fillRect(this.dir > 0 ? 23 : 15, 12, 3, 4);
-        c.strokeStyle = '#eb4d4b'; c.lineWidth = 1.5; c.beginPath();
-        if (this.dir > 0) { c.moveTo(15, 10); c.lineTo(20, 13); c.moveTo(26, 11); c.lineTo(22, 13); }
-        else { c.moveTo(7, 11); c.lineTo(11, 13); c.moveTo(18, 10); c.lineTo(14, 13); }
-        c.stroke();
-        c.fillStyle = '#ff7979'; c.fillRect(this.dir > 0 ? 20 : 11, 20, 3, 3);
-        c.restore();
-      }
-    }
-
-    class FlyingKhinkali {
-      constructor(x, y, range = 160) {
-        this.startX = x; this.baseY = y; this.x = x; this.y = y; this.w = 34; this.h = 32;
-        this.range = range; this.speed = 1.8; this.dir = 1; this.hp = 2; this.timer = Math.random() * 10;
-      }
-      update() {
-        this.timer += 0.05; this.x += this.speed * this.dir; this.y = this.baseY + Math.sin(this.timer) * 20;
-        if (Math.abs(this.x - this.startX) > this.range) this.dir *= -1;
-        if (Math.random() < 0.2) particles.push(new Particle(this.x + this.w/2, this.y + this.h, 'rgba(255,200,200,0.6)', (Math.random()-0.5)*2, 2, 3, 20));
-      }
-      draw(c) {
-        c.save(); c.translate(this.x - cameraX, this.y);
-        c.fillStyle = 'rgba(255, 255, 255, 0.5)'; c.beginPath();
-        c.ellipse(2, 15, 8, 4, -0.4, 0, Math.PI * 2); c.ellipse(this.w - 2, 15, 8, 4, 0.4, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#f8a5c2'; c.beginPath(); c.ellipse(this.w/2, this.h - 10, this.w/2, 11, 0, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#f78fb3'; c.beginPath(); c.arc(this.w/2, 5, 5, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#ff3838'; c.fillRect(10, 14, 4, 4); c.fillRect(20, 14, 4, 4);
-        c.restore();
-      }
-    }
-
-    class Kinza {
-      constructor(x, y) { this.x = x; this.y = y; this.w = 20; this.h = 20; this.baseY = y; this.timer = Math.random() * 10; this.collected = false; }
-      update() { this.timer += 0.08; this.y = this.baseY + Math.sin(this.timer) * 5; }
-      draw(c) {
-        c.save(); c.translate(this.x - cameraX, this.y);
-        c.fillStyle = '#2ed573'; c.beginPath(); c.arc(10, 8, 7, 0, Math.PI * 2); c.arc(6, 14, 5, 0, Math.PI * 2); c.arc(14, 14, 5, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#26af5f'; c.fillRect(9, 14, 2, 7); c.restore();
-      }
-    }
-
-    class BorjomiBottle {
-      constructor(x, y) { this.x = x; this.y = y; this.w = 18; this.h = 28; this.baseY = y; this.timer = Math.random() * 10; this.collected = false; }
-      update() { this.timer += 0.06; this.y = this.baseY + Math.sin(this.timer) * 4; }
-      draw(c) {
-        c.save(); c.translate(this.x - cameraX, this.y);
-        c.fillStyle = '#10ac84'; c.fillRect(4, 10, 10, 16); c.fillRect(7, 2, 4, 8);
-        c.fillStyle = '#ee5253'; c.fillRect(6, 0, 6, 3);
-        c.fillStyle = '#ffffff'; c.fillRect(4, 14, 10, 6);
-        c.fillStyle = '#ee5253'; c.fillRect(6, 16, 6, 2); c.restore();
-      }
-    }
-
-    const BOSS_BARKS = ['НА СКЛАДКИ ПОРВУ!', 'БУРКАНИН, ХУЙ ТЕБЕ, А НЕ КИНЗА!', 'КИПЯЩИЙ БУЛЬОН В ЕБАЛО!', 'СУКА, Я БЕССМЕРТНОЕ ТЕСТО!', 'ЖРИ МОЙ ПЕРЕЦ!'];
-    class BossKhinkali {
-      constructor(x, y) {
-        this.x = x; this.y = y; this.w = 105; this.h = 96; this.hp = 32; this.maxHp = 32;
-        this.vx = -2.5; this.vy = 0; this.timer = 0; this.active = false; this.defeated = false; this.enraged = false;
-      }
-      update(platforms) {
-        if (!this.active || this.defeated) return;
-        this.timer++; this.enraged = this.hp <= this.maxHp / 2;
-        const jumpInterval = this.enraged ? 65 : 100;
-        if (this.timer % jumpInterval === 0) {
-          this.vy = this.enraged ? -14.8 : -12.0; this.vx = player.x < this.x ? (this.enraged ? -5.5 : -3.8) : (this.enraged ? 5.5 : 3.8);
-          playSound('boss_roar');
-          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 18, BOSS_BARKS[Math.floor(Math.random() * BOSS_BARKS.length)], '#ff4757'));
-        }
-        if (this.timer % 110 === 0 || (this.enraged && this.timer % 65 === 0)) {
-          const targetDir = player.x < this.x ? -1 : 1;
-          brothProjectiles.push(new BrothBlob(this.x + this.w/2, this.y + 40, targetDir * 5.5, -4.5));
-          brothProjectiles.push(new BrothBlob(this.x + this.w/2, this.y + 40, targetDir * 3.8, -6.5));
-          if (this.enraged) brothProjectiles.push(new BrothBlob(this.x + this.w/2, this.y + 40, targetDir * 7.2, -3.0));
-          playSound('fork');
-        }
-        this.vy += 0.52; this.x += this.vx; this.y += this.vy;
-        if (this.x < 5720) { this.x = 5720; this.vx *= -1; }
-        if (this.x > 6620) { this.x = 6620; this.vx *= -1; }
-        for (let plat of platforms) {
-          if (plat.type === 'hazard') continue;
-          if (this.x < plat.x + plat.w && this.x + this.w > plat.x &&
-              this.y + this.h >= plat.y && this.y + this.h - this.vy <= plat.y + 16) {
-            if (this.vy > 3) {
-              for (let i = 0; i < 12; i++) particles.push(new Particle(this.x + Math.random()*this.w, plat.y, '#ffa502', (Math.random()-0.5)*8, -Math.random()*4, 5));
-            }
-            this.y = plat.y - this.h; this.vy = 0; this.vx *= 0.85;
-          }
-        }
-        if (Math.random() < 0.45) particles.push(new Particle(this.x + this.w/2 + (Math.random()-0.5)*25, this.y, 'rgba(255, 230, 200, 0.85)', (Math.random()-0.5)*2, -2.5, 6, 35));
-        const fill = document.getElementById('boss-fill');
-        const pct = Math.max(0, (this.hp / this.maxHp) * 100);
-        fill.style.width = pct + '%';
-        if (this.enraged) document.getElementById('boss-label').textContent = '🔥 ЕБУЧИЙ ХИНКАЛИ (В ЯРОСТИ, БЛЯТЬ!) 🔥';
-      }
-      takeDamage(amount = 1) {
-        this.hp -= amount; playSound('boss_hit'); screenShake = 6;
-        floatingTexts.push(new FloatingText(this.x + this.w/2, this.y + 10, `-${amount} ПО ТЕСТУ!`, '#ffa502'));
-        for (let i = 0; i < 10; i++) particles.push(new Particle(this.x + this.w/2, this.y + this.h/2, '#ff4757', (Math.random()-0.5)*9, (Math.random()-0.5)*9, 6));
-        if (this.hp <= 0) {
-          this.defeated = true; this.active = false;
-          playCutscene(WIN_CUTSCENE, () => { triggerVictory(); });
-        }
-      }
-      draw(c) {
-        c.save(); c.translate(this.x - cameraX, this.y);
-        const glow = c.createRadialGradient(this.w/2, this.h/2, 20, this.w/2, this.h/2, 70);
-        glow.addColorStop(0, this.enraged ? 'rgba(255, 71, 87, 0.45)' : 'rgba(255, 165, 2, 0.3)');
-        glow.addColorStop(1, 'rgba(255, 71, 87, 0)');
-        c.fillStyle = glow; c.fillRect(-25, -25, this.w + 50, this.h + 50);
-
-        c.fillStyle = this.enraged ? '#ffcccc' : '#f1f2f6'; c.beginPath(); c.ellipse(this.w/2, this.h - 26, this.w/2, 29, 0, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#ced6e0'; c.beginPath(); c.moveTo(6, this.h - 26); c.quadraticCurveTo(this.w/2, -12, this.w - 6, this.h - 26); c.fill();
-        c.fillStyle = '#f1f2f6'; c.beginPath(); c.arc(this.w/2, 10, 15, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#a4b0be'; c.fillRect(this.w/2 - 7, 12, 14, 15);
-
-        c.fillStyle = '#ffa502'; c.beginPath();
-        c.moveTo(this.w/2 - 16, 2); c.lineTo(this.w/2 - 16, -10); c.lineTo(this.w/2 - 8, -4);
-        c.lineTo(this.w/2, -12); c.lineTo(this.w/2 + 8, -4); c.lineTo(this.w/2 + 16, -10); c.lineTo(this.w/2 + 16, 2);
-        c.closePath(); c.fill();
-
-        c.fillStyle = '#2f3542'; c.fillRect(this.w/2 - 14, 36, 3, 3); c.fillRect(this.w/2 + 12, 44, 3, 3);
-        c.fillRect(this.w/2 - 5, 50, 3, 3); c.fillRect(this.w/2 + 22, 38, 3, 3);
-
-        c.fillStyle = '#ff4757'; c.beginPath(); c.arc(this.w/2 - 20, 44, 9, 0, Math.PI * 2); c.arc(this.w/2 + 20, 44, 9, 0, Math.PI * 2); c.fill();
-        c.fillStyle = '#ffffff'; c.fillRect(this.w/2 - 21, 43, 4, 4); c.fillRect(this.w/2 + 19, 43, 4, 4);
-
-        c.strokeStyle = '#2f3542'; c.lineWidth = 4; c.beginPath();
-        c.moveTo(this.w/2 - 32, 34); c.lineTo(this.w/2 - 8, 41); c.moveTo(this.w/2 + 32, 34); c.lineTo(this.w/2 + 8, 41); c.stroke();
-
-        c.fillStyle = '#2f3542'; c.beginPath(); c.arc(this.w/2, 64, 14, 0, Math.PI); c.fill();
-        c.fillStyle = '#ffffff'; c.beginPath();
-        c.moveTo(this.w/2 - 10, 64); c.lineTo(this.w/2 - 5, 71); c.lineTo(this.w/2, 64);
-        c.moveTo(this.w/2, 64); c.lineTo(this.w/2 + 5, 71); c.lineTo(this.w/2 + 10, 64); c.fill();
         c.restore();
       }
     }
@@ -963,7 +703,10 @@
 
     function addRage(amt) {
       rage = Math.min(100, rage + amt); updateHUD();
-      if (rage >= 100) floatingTexts.push(new FloatingText(player.x + player.w/2, player.y - 25, '🔥 УЛЬТА ГОТОВА! НАЖМИ [E]! 🔥', '#ff3838'));
+      if (rage >= 100) {
+        const ultReadyTxt = isFamilyFriendly ? '🔥 ТРИУМФ ГОТОВ! НАЖМИ [E]! 🔥' : '🔥 УЛЬТА ГОТОВА! НАЖМИ [E]! 🔥';
+        floatingTexts.push(new FloatingText(player.x + player.w/2, player.y - 25, ultReadyTxt, '#ff3838'));
+      }
     }
 
     function updateHUD() {
@@ -980,7 +723,10 @@
       if (player.x < 2000) { zoneEl.textContent = 'ЗОНА 1: ТБИЛИССКИЕ КРЫШИ'; zoneEl.style.color = 'var(--gold)'; }
       else if (player.x < 4100) { zoneEl.textContent = 'ЗОНА 2: КАВКАЗСКИЙ ПЕРЕВАЛ'; zoneEl.style.color = 'var(--accent)'; }
       else if (player.x < 5650) { zoneEl.textContent = 'ЗОНА 3: ЦЕХ КИПЯЩЕГО ТЕСТА'; zoneEl.style.color = 'var(--purple)'; }
-      else { zoneEl.textContent = 'ЗОНА 4: АРЕНА ЕБУЧЕГО ХИНКАЛИ'; zoneEl.style.color = 'var(--accent)'; }
+      else {
+        const arenaBossName = isFamilyFriendly ? 'АРЕНА ГРОЗНОГО ХИНКАЛИ' : 'АРЕНА ЕБУЧЕГО ХИНКАЛИ';
+        zoneEl.textContent = `ЗОНА 4: ${arenaBossName}`; zoneEl.style.color = 'var(--accent)';
+      }
     }
 
     function startIntroCutscene() {
@@ -991,7 +737,7 @@
       document.getElementById('gameover-screen').style.display = 'none';
       document.getElementById('victory-screen').style.display = 'none';
       document.getElementById('boss-hud').style.display = 'none';
-      playCutscene(INTRO_CUTSCENE, () => { gameState = 'PLAYING'; });
+      playCutscene(getIntroDialogue(), () => { gameState = 'PLAYING'; });
     }
 
     function triggerGameOver() { gameState = 'GAMEOVER'; document.getElementById('gameover-screen').style.display = 'flex'; playSound('hit'); }
@@ -1018,11 +764,12 @@
       if (player.x >= 5700 && !bossCutsceneTriggered) {
         bossCutsceneTriggered = true;
         keys.left = keys.right = keys.jump = keys.attack = keys.bomb = keys.dash = keys.ult = false;
-        playCutscene(BOSS_CUTSCENE, () => {
+        playCutscene(getBossDialogue(), () => {
           gameState = 'PLAYING'; boss.active = true;
           document.getElementById('boss-hud').style.display = 'flex';
           playSound('boss_roar');
-          floatingTexts.push(new FloatingText(boss.x + boss.w/2, boss.y - 30, 'ЕБУЧИЙ ХИНКАЛИ В АТАКЕ!', '#ff4757'));
+          const bossSpawnTxt = isFamilyFriendly ? 'ГРОЗНЫЙ ХИНКАЛИ В АТАКЕ!' : 'ЕБУЧИЙ ХИНКАЛИ В АТАКЕ!';
+          floatingTexts.push(new FloatingText(boss.x + boss.w/2, boss.y - 30, bossSpawnTxt, '#ff4757'));
         });
         return;
       }
@@ -1038,7 +785,10 @@
           if (player.vy > 0 && player.y + player.h - player.vy <= e.y + 16) {
             player.vy = -11.0; player.canDoubleJump = true; e.hp--;
             playSound('fork'); addRage(12);
-            floatingTexts.push(new FloatingText(e.x + e.w/2, e.y, MISHA_KILL_BARKS[Math.floor(Math.random()*MISHA_KILL_BARKS.length)], '#ffa502'));
+            const killBarks = isFamilyFriendly
+              ? ['ПОБЕДА!', 'СЪЕДЕН!', 'ОТЛИЧНЫЙ ПРЫЖОК!', 'НА ТАРЕЛКУ!']
+              : ['ВЫЕБАН!', 'СОЖРИ ВИЛКУ, МРАЗЬ!', 'МИНУС ТЕСТО!', 'БУРКАНИН НЕ ПРОЩАЕТ!'];
+            floatingTexts.push(new FloatingText(e.x + e.w/2, e.y, killBarks[Math.floor(Math.random()*killBarks.length)], '#ffa502'));
             for (let p = 0; p < 8; p++) particles.push(new Particle(e.x + e.w/2, e.y + e.h/2, '#ced6e0', (Math.random()-0.5)*6, (Math.random()-0.5)*6, 4));
             if (e.hp <= 0) { enemies.splice(i, 1); score += 100; updateHUD(); continue; }
           } else {
@@ -1055,7 +805,7 @@
           if (player.vy > 0 && player.y + player.h - player.vy <= fe.y + 16) {
             player.vy = -10.5; player.canDoubleJump = true;
             flyingEnemies.splice(i, 1); score += 150; addRage(18); playSound('fork');
-            floatingTexts.push(new FloatingText(fe.x, fe.y, 'СБИТ НАХУЙ!', '#ff4757'));
+            floatingTexts.push(new FloatingText(fe.x, fe.y, 'СБИТ!', '#ff4757'));
             continue;
           } else {
             player.takeDamage();
@@ -1195,10 +945,23 @@
       for (let ft of floatingTexts) ft.draw(ctx);
 
       ctx.fillStyle = '#ffffff'; ctx.font = 'bold 13px Courier New, monospace';
-      if (cameraX < 350) ctx.fillText('➡ БЕГИ ВПЕРЁД, МИША! ХИНКАЛИ ПИЗДИТ НА ХРЕБТЕ!', 130 - cameraX, 390);
-      if (player.x > 1850 && player.x < 2200) { ctx.fillStyle = '#ff4757'; ctx.fillText('⚠ ВНИМАНИЕ: КАВКАЗСКИЙ ПЕРЕВАЛ! КИПЯЩИЙ БУЛЬОН ВНИЗУ! ⚠', 1900 - cameraX, 390); }
-      if (player.x > 3950 && player.x < 4350) { ctx.fillStyle = '#9b59b6'; ctx.fillText('⚡ ЦЕХ АДСКОГО ТЕСТА: ДЕРЖИ ВИЛКУ НАГОТОВЕ! ⚡', 4000 - cameraX, 390); }
-      if (player.x > 5450 && player.x < 5750) { ctx.fillStyle = '#ffa502'; ctx.fillText('💀 ВХОД НА АРЕНУ СВОБОДЕН: ТАМ СИДИТ ЕБУЧИЙ ХИНКАЛИ! 💀', 5470 - cameraX, 390); }
+      if (cameraX < 350) {
+        const sign1 = isFamilyFriendly ? '➡ ВПЕРЁД, МИША! ХИНКАЛИ БЕЖИТ К ПЕРЕВАЛУ!' : '➡ БЕГИ ВПЕРЁД, МИША! ХИНКАЛИ ПИЗДИТ НА ХРЕБТЕ!';
+        ctx.fillText(sign1, 130 - cameraX, 390);
+      }
+      if (player.x > 1850 && player.x < 2200) {
+        ctx.fillStyle = '#ff4757';
+        ctx.fillText('⚠ ВНИМАНИЕ: КАВКАЗСКИЙ ПЕРЕВАЛ! КИПЯЩИЙ БУЛЬОН ВНИЗУ! ⚠', 1900 - cameraX, 390);
+      }
+      if (player.x > 3950 && player.x < 4350) {
+        ctx.fillStyle = '#9b59b6';
+        ctx.fillText('⚡ ЦЕХ ГОРЯЧЕГО ТЕСТА: ДЕРЖИ ВИЛКУ НАГОТОВЕ! ⚡', 4000 - cameraX, 390);
+      }
+      if (player.x > 5450 && player.x < 5750) {
+        ctx.fillStyle = '#ffa502';
+        const signBoss = isFamilyFriendly ? '👑 ВХОД НА АРЕНУ СВОБОДЕН: ТАМ ГРОЗНЫЙ ХИНКАЛИ! 👑' : '💀 ВХОД НА АРЕНУ СВОБОДЕН: ТАМ СИДИТ ЕБУЧИЙ ХИНКАЛИ! 💀';
+        ctx.fillText(signBoss, 5470 - cameraX, 390);
+      }
       ctx.restore();
     }
 

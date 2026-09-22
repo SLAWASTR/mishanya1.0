@@ -119,40 +119,60 @@
     .boss-name { font-size: 13px; color: #ffa502; font-weight: 900; margin-bottom: 3px; text-transform: uppercase; }
     .boss-bar-bg { width: 100%; height: 14px; background: #2b1117; border-radius: 4px; overflow: hidden; border: 1px solid #551520; }
     .boss-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4757, #ffa502); transition: width 0.15s ease-out; }
+
+    /* Dialogue Box (Story & Cutscenes) */
     #dialogue-box {
       position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-      width: 840px; max-width: 92%; background: rgba(14, 10, 22, 0.95);
-      border: 3px solid #ffa502; border-radius: 10px; padding: 12px 18px;
-      display: none; z-index: 25; box-shadow: 0 0 30px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 165, 2, 0.4);
-      cursor: pointer;
+      width: 880px; max-width: 94%; background: rgba(14, 10, 22, 0.96);
+      border: 3px solid #ffa502; border-radius: 12px; padding: 14px 20px;
+      display: none; z-index: 50; box-shadow: 0 0 35px rgba(0, 0, 0, 0.95), 0 0 20px rgba(255, 165, 2, 0.5);
+      cursor: pointer; pointer-events: auto;
     }
     .dialogue-content { display: flex; align-items: center; gap: 18px; }
     .dialogue-avatar {
-      width: 68px; height: 68px; border: 2px solid #ff4757; border-radius: 8px;
+      width: 72px; height: 72px; border: 2px solid #ff4757; border-radius: 10px;
       background: #201a2c; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-      font-size: 38px;
+      font-size: 40px; box-shadow: 0 0 10px rgba(255,71,87,0.3);
     }
     .dialogue-text-wrap { flex: 1; }
-    .dialogue-speaker { font-size: 15px; font-weight: 900; color: #ffa502; margin-bottom: 4px; text-transform: uppercase; }
-    .dialogue-text { font-size: 15px; line-height: 1.45; color: #f1f2f6; }
+    .dialogue-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .dialogue-speaker { font-size: 16px; font-weight: 900; color: #ffa502; text-transform: uppercase; letter-spacing: 0.5px; }
+    .dia-skip-btn {
+      background: rgba(255, 71, 87, 0.2); border: 1px solid #ff4757; color: #ff6b81;
+      font-family: inherit; font-size: 11px; font-weight: bold; padding: 3px 9px; border-radius: 4px;
+      cursor: pointer; transition: all 0.15s ease;
+    }
+    .dia-skip-btn:hover { background: #ff4757; color: #fff; }
+    .dialogue-text { font-size: 15.5px; line-height: 1.45; color: #f1f2f6; min-height: 44px; }
     .dialogue-prompt { text-align: right; font-size: 11px; color: #a4b0be; margin-top: 6px; animation: blink 1s infinite; }
     @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
     .screen-overlay {
       position: absolute; inset: 0; background: rgba(10, 8, 16, 0.92);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       z-index: 30; padding: 20px; text-align: center; backdrop-filter: blur(6px);
+      pointer-events: auto;
     }
     .screen-title {
       font-size: clamp(22px, 5vw, 38px); font-weight: 900; color: #ff4757;
       text-shadow: 0 0 20px rgba(255, 71, 87, 0.8); margin-bottom: 10px; text-transform: uppercase;
     }
     .screen-subtitle { font-size: 13.5px; color: #ced6e0; max-width: 620px; line-height: 1.45; margin-bottom: 14px; }
+    
+    .start-btn-group {
+      display: flex; gap: 12px; justify-content: center; align-items: center; margin-bottom: 6px;
+    }
     .btn-action {
       background: #ff4757; color: #fff; border: none; border-radius: 6px;
-      padding: 12px 30px; font-size: 17px; font-weight: 900; font-family: inherit;
+      padding: 13px 32px; font-size: 17px; font-weight: 900; font-family: inherit;
       cursor: pointer; box-shadow: 0 0 15px rgba(255, 71, 87, 0.5); transition: all 0.15s ease;
+      display: inline-block; position: relative; z-index: 35;
     }
     .btn-action:hover { background: #ff6b81; transform: translateY(-2px); box-shadow: 0 0 30px rgba(255, 71, 87, 0.8); }
+    .btn-action.quick {
+      background: #2f2842; color: #ced6e0; border: 1px solid #70a1ff; box-shadow: none; font-size: 14px; padding: 11px 20px;
+    }
+    .btn-action.quick:hover { background: #70a1ff; color: #000; box-shadow: 0 0 15px rgba(112, 161, 255, 0.6); }
 
     .overlay-mode-section {
       margin-top: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px;
@@ -211,31 +231,39 @@
         <div class="boss-bar-bg"><div class="boss-bar-fill" id="boss-fill"></div></div>
       </div>
 
-      <div id="dialogue-box">
+      <!-- Dialogue & Cutscene Box -->
+      <div id="dialogue-box" onclick="advanceDialogue()">
         <div class="dialogue-content">
           <div class="dialogue-avatar" id="dia-avatar">🧔</div>
           <div class="dialogue-text-wrap">
-            <div class="dialogue-speaker" id="dia-speaker">МИША БУРКАНИН</div>
-            <div class="dialogue-text" id="dia-text">Текст...</div>
-            <div class="dialogue-prompt">[ПРОБЕЛ] или КЛИК — ДАЛЕЕ ▶</div>
+            <div class="dialogue-header">
+              <div class="dialogue-speaker" id="dia-speaker">МИША БУРКАНИН</div>
+              <button class="dia-skip-btn" id="dia-skip-btn" onclick="event.stopPropagation(); skipCutscene();">ПРОПУСТИТЬ ⏩</button>
+            </div>
+            <div class="dialogue-text" id="dia-text">Текст диалога...</div>
+            <div class="dialogue-prompt">[ПРОБЕЛ], [ENTER] или КЛИК — ДАЛЕЕ ▶</div>
           </div>
         </div>
       </div>
 
+      <!-- Start Screen -->
       <div class="screen-overlay" id="start-screen">
         <div class="screen-title" id="start-title">Миша Бурканин<br>и Грозный Хинкали</div>
         <p class="screen-subtitle" id="start-subtitle">
-          Горячий и непредсказуемый <strong>Грозный Хинкали</strong> взбунтовался и бежит по Кавказскому хребту!<br>
-          Миша взлетает ввысь на двойных прыжках и возвращает беглеца на праздничный стол!
+          Горячий и непредсказуемый <strong>Грозный Хинкали</strong> взбунтовался прямо в тарелке и бежит по крышам на Кавказский хребет!<br>
+          Сможет ли Миша вернуть беглеца на праздничный стол?
         </p>
-        <button class="btn-action" id="btn-start">В БОЙ!</button>
+        <div class="start-btn-group">
+          <button class="btn-action" id="btn-start" onclick="startStoryIntro()">В БОЙ С СЮЖЕТОМ! 🎬</button>
+          <button class="btn-action quick" id="btn-quick-start" onclick="startDirectGame()">БЫСТРЫЙ СТАРТ ⚡</button>
+        </div>
 
         <!-- 2 Mode Buttons on Start Screen -->
         <div class="overlay-mode-section">
-          <div class="overlay-mode-label">ВЫБЕРИТЕ РЕЖИМ ОЗВУЧКИ:</div>
+          <div class="overlay-mode-label">ВЫБЕРИТЕ РЕЖИМ ОЗВУЧКИ И ДИАЛОГОВ:</div>
           <div class="mode-btn-row">
-            <button class="mode-choice-btn active family" id="btn-ovr-family">😇 БЕЗ МАТА (0+)</button>
-            <button class="mode-choice-btn" id="btn-ovr-adult">🔞 С МАТОМ (18+)</button>
+            <button class="mode-choice-btn active family" id="btn-ovr-family" onclick="applyMode(true)">😇 БЕЗ МАТА (0+)</button>
+            <button class="mode-choice-btn" id="btn-ovr-adult" onclick="applyMode(false)">🔞 С МАТОМ (18+)</button>
           </div>
         </div>
 
@@ -244,19 +272,21 @@
         </div>
       </div>
 
+      <!-- Game Over Screen -->
       <div class="screen-overlay" id="gameover-screen" style="display: none;">
         <div class="screen-title" id="gameover-title">МИША ОБЖЁГСЯ БУЛЬОНОМ!</div>
         <p class="screen-subtitle" id="gameover-subtitle">«Ой-ой-ой, какой горячий сок!» — Мише нужен отдых и глоток Боржоми.</p>
-        <button class="btn-action" id="btn-restart">ВОСКРЕСНУТЬ И ОТОМСТИТЬ</button>
+        <button class="btn-action" id="btn-restart" onclick="startStoryIntro()">ВОСКРЕСНУТЬ И ОТОМСТИТЬ</button>
       </div>
 
+      <!-- Victory Screen -->
       <div class="screen-overlay" id="victory-screen" style="display: none;">
         <div class="screen-title" id="victory-title" style="color: #2ed573;">ХИНКАЛИ ВЕЖЛИВО СЪЕДЕН!</div>
         <p class="screen-subtitle" id="victory-subtitle">
           Грозный Хинкали рассыпался на нежнейшее мясо и ароматный бульон!<br>
           Миша Бурканин выпил литр Боржоми и сытно закусил кинзой. Победа!
         </p>
-        <button class="btn-action" id="btn-win-restart">СЫГРАТЬ ЕЩЁ РАЗОК</button>
+        <button class="btn-action" id="btn-win-restart" onclick="startStoryIntro()">СЫГРАТЬ ЕЩЁ РАЗОК</button>
         <div class="overlay-credits" style="margin-top: 18px;">
           1-26 ДИЗАЙН &bull; <span>Создатели: Мальцев, Даманин, Бурканин</span>
         </div>
@@ -324,8 +354,8 @@
       <div class="mode-selection-box">
         <div class="mode-label">ВЫБОР РЕЖИМА:</div>
         <div class="mode-btn-row">
-          <button class="mode-choice-btn active family" id="btn-sb-family">😇 БЕЗ МАТА</button>
-          <button class="mode-choice-btn" id="btn-sb-adult">🔞 18+ (МАТ)</button>
+          <button class="mode-choice-btn active family" id="btn-sb-family" onclick="applyMode(true)">😇 БЕЗ МАТА</button>
+          <button class="mode-choice-btn" id="btn-sb-adult" onclick="applyMode(false)">🔞 18+ (МАТ)</button>
         </div>
         <div class="mode-info-txt" id="mode-info-text">Семейный режим: без ругательств, для всех возрастов!</div>
       </div>
@@ -339,7 +369,7 @@
   </div>
 
   <script>
-    // --- Family-Friendly Mode State (DEFAULT: TRUE) ---
+    // --- Mode State (DEFAULT: TRUE - Family Friendly) ---
     let isFamilyFriendly = true;
 
     function applyMode(modeFamily) {
@@ -352,30 +382,28 @@
       const infoTxt = document.getElementById('mode-info-text');
 
       if (isFamilyFriendly) {
-        // Active Family
-        sbFam.className = 'mode-choice-btn active family';
-        sbAdu.className = 'mode-choice-btn';
-        ovrFam.className = 'mode-choice-btn active family';
-        ovrAdu.className = 'mode-choice-btn';
-        infoTxt.textContent = 'Семейный режим: без ругательств, для всех возрастов!';
+        if (sbFam) sbFam.className = 'mode-choice-btn active family';
+        if (sbAdu) sbAdu.className = 'mode-choice-btn';
+        if (ovrFam) ovrFam.className = 'mode-choice-btn active family';
+        if (ovrAdu) ovrAdu.className = 'mode-choice-btn';
+        if (infoTxt) infoTxt.textContent = 'Семейный режим: без ругательств, для всех возрастов!';
 
         document.getElementById('start-title').innerHTML = 'Миша Бурканин<br>и Грозный Хинкали';
-        document.getElementById('start-subtitle').innerHTML = 'Горячий и непредсказуемый <strong>Грозный Хинкали</strong> взбунтовался и бежит по Кавказскому хребту!<br>Миша взлетает ввысь на двойных прыжках и возвращает беглеца на праздничный стол!';
+        document.getElementById('start-subtitle').innerHTML = 'Горячий и непредсказуемый <strong>Грозный Хинкали</strong> взбунтовался прямо в тарелке и бежит по крышам на Кавказский хребет!<br>Сможет ли Миша вернуть беглеца на праздничный стол?';
         document.getElementById('gameover-title').textContent = 'МИША ОБЖЁГСЯ БУЛЬОНОМ!';
         document.getElementById('gameover-subtitle').textContent = '«Ой-ой-ой, какой горячий сок!» — Мише нужен отдых и глоток Боржоми.';
         document.getElementById('victory-title').textContent = 'ХИНКАЛИ ВЕЖЛИВО СЪЕДЕН!';
         document.getElementById('victory-subtitle').innerHTML = 'Грозный Хинкали рассыпался на нежнейшее мясо и ароматный бульон!<br>Миша Бурканин выпил литр Боржоми и сытно закусил кинзой. Победа!';
         document.getElementById('boss-label').textContent = '⚡ ГРОЗНЫЙ ХИНКАЛИ ⚡';
       } else {
-        // Active Adult
-        sbFam.className = 'mode-choice-btn';
-        sbAdu.className = 'mode-choice-btn active adult';
-        ovrFam.className = 'mode-choice-btn';
-        ovrAdu.className = 'mode-choice-btn active adult';
-        infoTxt.textContent = 'Режим 18+: отборный кавказский мат и ярость Бурканина!';
+        if (sbFam) sbFam.className = 'mode-choice-btn';
+        if (sbAdu) sbAdu.className = 'mode-choice-btn active adult';
+        if (ovrFam) ovrFam.className = 'mode-choice-btn';
+        if (ovrAdu) ovrAdu.className = 'mode-choice-btn active adult';
+        if (infoTxt) infoTxt.textContent = 'Режим 18+: отборный кавказский мат и ярость Бурканина!';
 
         document.getElementById('start-title').innerHTML = 'Миша Бурканин<br>и Ебучий Хинкали';
-        document.getElementById('start-subtitle').innerHTML = 'Горячий, бульонный <strong>Ебучий Хинкали</strong> взбунтовался и бежит по Кавказскому хребту!<br>Миша взлетает ввысь на двойных прыжках и достаёт весь свой адский арсенал!';
+        document.getElementById('start-subtitle').innerHTML = 'Горячий, бульонный <strong>Ебучий Хинкали</strong> охуел, выскочил из котла и бежит на перевал!<br>Миша взлетает ввысь на двойных прыжках и достаёт весь свой адский арсенал!';
         document.getElementById('gameover-title').textContent = 'ТЕБЯ ЗАВАРИЛИ НАХУЙ!';
         document.getElementById('gameover-subtitle').textContent = '«Сука, да этот бульон разъедает даже душу...» — Миша пал жертвой недоваренного фарша.';
         document.getElementById('victory-title').textContent = 'ХИНКАЛИ ВЫЕБАН И СЪЕДЕН!';
@@ -384,17 +412,12 @@
       }
     }
 
-    document.getElementById('btn-sb-family').addEventListener('click', () => applyMode(true));
-    document.getElementById('btn-sb-adult').addEventListener('click', () => applyMode(false));
-    document.getElementById('btn-ovr-family').addEventListener('click', () => applyMode(true));
-    document.getElementById('btn-ovr-adult').addEventListener('click', () => applyMode(false));
-
     // --- Audio ---
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null, soundEnabled = true;
     function initAudio() {
-      if (!audioCtx) audioCtx = new AudioContext();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (!audioCtx && AudioContext) { try { audioCtx = new AudioContext(); } catch(e){} }
+      if (audioCtx && audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch(e){} }
     }
     function playSound(type) {
       if (!soundEnabled) return;
@@ -441,9 +464,9 @@
           gain.gain.setValueAtTime(0.35, t); gain.gain.linearRampToValueAtTime(0.01, t + 0.22);
           osc.start(t); osc.stop(t + 0.22);
         } else if (type === 'talk') {
-          osc.type = 'square'; osc.frequency.setValueAtTime(220 + Math.random() * 80, t);
-          gain.gain.setValueAtTime(0.12, t); gain.gain.linearRampToValueAtTime(0.01, t + 0.06);
-          osc.start(t); osc.stop(t + 0.06);
+          osc.type = 'square'; osc.frequency.setValueAtTime(230 + Math.random() * 90, t);
+          gain.gain.setValueAtTime(0.12, t); gain.gain.linearRampToValueAtTime(0.01, t + 0.07);
+          osc.start(t); osc.stop(t + 0.07);
         } else if (type === 'heal') {
           osc.type = 'sine'; osc.frequency.setValueAtTime(350, t); osc.frequency.exponentialRampToValueAtTime(750, t + 0.25);
           gain.gain.setValueAtTime(0.3, t); gain.gain.linearRampToValueAtTime(0.01, t + 0.25);
@@ -479,10 +502,167 @@
 
     const keys = { left: false, right: false, jump: false, down: false, attack: false, bomb: false, dash: false, ult: false };
 
+    // --- Story & Cutscenes System ---
+    let currentCutscene = null, cutsceneIndex = 0, postCutsceneAction = null;
+
+    function getIntroDialogue() {
+      if (isFamilyFriendly) {
+        return [
+          { speaker: 'ОФИЦИАНТ ГИВИ', avatar: '🍷', text: 'Миша, дорогой генацвале! Держи свежайший хинкали, прямо из котла! Сочный, ароматный, с пылу с жару!' },
+          { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Спасибо огромное, Гиви! Сейчас аккуратно вилочкой, бульончик выпьем, отлично пообедаем!' },
+          { speaker: 'ГРОЗНЫЙ ХИНКАЛИ', avatar: '🥟', text: 'НЕ ПРИКАСАЙСЯ КО МНЕ, БУРКАНИН! Я НЕ ХОЧУ БЫТЬ ОБЕДОМ! Я РОЖДЁН ДЛЯ ВЕЛИКИХ ДЕЛ!' },
+          { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'ОГО! Хинкали ожил и разговаривает?! Ничего себе чудеса тбилисской кулинарии!' },
+          { speaker: 'ГРОЗНЫЙ ХИНКАЛИ', avatar: '🥟', text: 'Я свободен! Попробуй догнать меня на Кавказском хребте, если сможешь! Мои братья встанут стеной!' },
+          { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Гиви, подержи мою куртку! Я спасу наш обед, совершу двойное сальто и верну беглеца на тарелку!' }
+        ];
+      }
+      return [
+        { speaker: 'ОФИЦИАНТ ГИВИ', avatar: '🍷', text: 'Миша, дорогой! Держи свежайший, только что из котла! Прямо дышит, бульон через край льёт!' },
+        { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Спасибо, Гиви. Щас ебанём вилочкой, бульончик выпьем, заебись посидим, отдохнём...' },
+        { speaker: 'ЕБУЧИЙ ХИНКАЛИ', avatar: '🥟', text: 'ПОШЁЛ НАХУЙ, БУРКАНИН! Я ТЕБЕ НЕ ЗАКУСКА, СУКА! ХУЙ ТЕБЕ В РОТ, А НЕ МОЙ БУЛЬОН!' },
+        { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'ЧТО ЗА НАХУЙ?! Хинкали говорит человеческим голосом?! Ты чё, охуел в край, блять?!' },
+        { speaker: 'ЕБУЧИЙ ХИНКАЛИ', avatar: '🥟', text: 'Я свободен, очкарик! Я сожгу этот город кипящим бульоном! Ищи меня на хребте, если не зассал!' },
+        { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Гиви, держи куртку нахуй! Я зарядил перечные гранаты, заточил шампур и оторву этому ебучему тесту хвост!' }
+      ];
+    }
+
+    function getBossDialogue() {
+      if (isFamilyFriendly) {
+        return [
+          { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Вот ты и попался! Хватит бегать по крышам и перевалам! Пора возвращаться на тарелку!' },
+          { speaker: 'ГРОЗНЫЙ ХИНКАЛИ', avatar: '🥟', text: 'Ха-ха-ха! Ты дошёл, Бурканин! Но я стал огромным, и я слишком горяч для твоей вилки!' },
+          { speaker: 'ГРОЗНЫЙ ХИНКАЛИ', avatar: '🥟', text: 'У меня триста градусов кипящего пара! Мои складочки непробиваемы!' },
+          { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Меньше слов, тесто! Доставай свой бульон — я покажу тебе силу кавказского аппетита!' }
+        ];
+      }
+      return [
+        { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Вот ты и попался, кусок горячего теста! Заебался я за тобой по горам скакать!' },
+        { speaker: 'ЕБУЧИЙ ХИНКАЛИ', avatar: '🥟', text: 'ХА-ХА-ХА! Ты всё-таки дошёл, Бурканин! Но здесь твоя могила, блять!' },
+        { speaker: 'ЕБУЧИЙ ХИНКАЛИ', avatar: '🥟', text: 'Я накопил триста градусов кипящего сока! Я растворю твой хипстерский свитер нахуй!' },
+        { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Меньше пизди, тесто недоваренное. Готовь свою жопу под боевую вилку и шампур!' }
+      ];
+    }
+
+    function getWinDialogue() {
+      if (isFamilyFriendly) {
+        return [
+          { speaker: 'ГРОЗНЫЙ ХИНКАЛИ', avatar: '🥟', text: 'О нет! Мой бульон остывает... Складочки сдаются... Ты победил, Миша! Ты истинный знаток кухни!' },
+          { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Гастрономический порядок восстановлен! Никакой спешки, аккуратно надкусываем... Приятного аппетита!' },
+          { speaker: 'ОФИЦИАНТ ГИВИ', avatar: '🍷', text: 'ВАХ! Миша, генацвале, ты настоящий герой! Неси тарелку, соус сацебели и свежий лаваш!' }
+        ];
+      }
+      return [
+        { speaker: 'ЕБУЧИЙ ХИНКАЛИ', avatar: '🥟', text: 'НЕЕЕЕТ! Мой бульон вытекает... Складочки рвутся... Бурканин, ты монстр ебучий, нахуй...' },
+        { speaker: 'МИША БУРКАНИН', avatar: '🧔', text: 'Я же предупреждал: с Бурканиным шутки плохи. А теперь — время плотного, сочного обеда!' },
+        { speaker: 'ОФИЦИАНТ ГИВИ', avatar: '🍷', text: 'ВАХ! Миша, генацвале, ты его разорвал! Неси перчик, кинзу и графин ледяной чачи!' }
+      ];
+    }
+
+    function playCutscene(dialogueList, onComplete) {
+      gameState = 'CUTSCENE';
+      currentCutscene = dialogueList;
+      cutsceneIndex = 0;
+      postCutsceneAction = onComplete;
+      const db = document.getElementById('dialogue-box');
+      if (db) db.style.display = 'block';
+      showCurrentDialogue();
+    }
+
+    function showCurrentDialogue() {
+      if (!currentCutscene || cutsceneIndex >= currentCutscene.length) return;
+      const item = currentCutscene[cutsceneIndex];
+      const spk = document.getElementById('dia-speaker');
+      const ava = document.getElementById('dia-avatar');
+      const txt = document.getElementById('dia-text');
+      if (spk) spk.textContent = item.speaker;
+      if (ava) ava.textContent = item.avatar;
+      if (txt) txt.textContent = item.text;
+      playSound('talk');
+    }
+
+    function advanceDialogue() {
+      if (!currentCutscene) return;
+      cutsceneIndex++;
+      if (cutsceneIndex < currentCutscene.length) {
+        showCurrentDialogue();
+      } else {
+        skipCutscene();
+      }
+    }
+
+    function skipCutscene() {
+      const db = document.getElementById('dialogue-box');
+      if (db) db.style.display = 'none';
+      currentCutscene = null;
+      if (postCutsceneAction) {
+        const action = postCutsceneAction;
+        postCutsceneAction = null;
+        action();
+      }
+    }
+
+    // Launch with full intro story
+    function startStoryIntro() {
+      initAudio();
+      player.reset(); score = 0; rage = 0;
+      forks = []; pepperBombs = []; brothProjectiles = []; particles = []; floatingTexts = [];
+      buildLevel(); updateHUD();
+
+      const st = document.getElementById('start-screen');
+      const go = document.getElementById('gameover-screen');
+      const vi = document.getElementById('victory-screen');
+      const bh = document.getElementById('boss-hud');
+      if (st) st.style.display = 'none';
+      if (go) go.style.display = 'none';
+      if (vi) vi.style.display = 'none';
+      if (bh) bh.style.display = 'none';
+
+      playCutscene(getIntroDialogue(), () => {
+        gameState = 'PLAYING';
+        playSound('jump');
+        const startMsg = isFamilyFriendly
+          ? 'МИША: «Держи куртку, Гиви! Я верну хинкали на тарелку!»'
+          : 'МИША: «Держи куртку, Гиви! Я выебу это тесто насквозь!»';
+        floatingTexts.push(new FloatingText(player.x + 80, player.y - 25, startMsg, '#ffa502'));
+      });
+    }
+
+    // Quick start without intro
+    function startDirectGame() {
+      initAudio();
+      player.reset(); score = 0; rage = 0;
+      forks = []; pepperBombs = []; brothProjectiles = []; particles = []; floatingTexts = [];
+      buildLevel(); updateHUD();
+
+      const st = document.getElementById('start-screen');
+      const go = document.getElementById('gameover-screen');
+      const vi = document.getElementById('victory-screen');
+      const bh = document.getElementById('boss-hud');
+      const db = document.getElementById('dialogue-box');
+
+      if (st) st.style.display = 'none';
+      if (go) go.style.display = 'none';
+      if (vi) vi.style.display = 'none';
+      if (bh) bh.style.display = 'none';
+      if (db) db.style.display = 'none';
+
+      gameState = 'PLAYING';
+      playSound('jump');
+
+      const startMsg = isFamilyFriendly
+        ? 'МИША: «Вперёд за беглецом!»'
+        : 'МИША: «Держи куртку, Гиви! Щас я ему устрою!»';
+      floatingTexts.push(new FloatingText(player.x + 80, player.y - 25, startMsg, '#ffa502'));
+    }
+
     window.addEventListener('keydown', (e) => {
       initAudio();
       if (gameState === 'CUTSCENE') {
-        if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyF') advanceDialogue();
+        if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyF' || e.code === 'KeyE') {
+          advanceDialogue();
+        } else if (e.code === 'Escape') {
+          skipCutscene();
+        }
         return;
       }
       if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
@@ -492,7 +672,11 @@
         if (gameState === 'PLAYING') player.groundSlam();
       }
       if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
-        if (gameState === 'PLAYING') player.jump();
+        if (gameState === 'START') {
+          startStoryIntro();
+        } else if (gameState === 'PLAYING') {
+          player.jump();
+        }
         keys.jump = true;
       }
       if (e.code === 'KeyF' || e.code === 'KeyX') {
@@ -511,7 +695,7 @@
         if (!keys.ult && (gameState === 'PLAYING')) player.triggerUlt();
         keys.ult = true;
       }
-      if (e.code === 'KeyR' && (gameState === 'GAMEOVER' || gameState === 'WIN')) startIntroCutscene();
+      if (e.code === 'KeyR' && (gameState === 'GAMEOVER' || gameState === 'WIN')) startStoryIntro();
     });
 
     window.addEventListener('keyup', (e) => {
@@ -527,6 +711,7 @@
 
     function setupTouch(id, keyProp, isAction = false, actionFn = null) {
       const el = document.getElementById(id);
+      if (!el) return;
       el.addEventListener('touchstart', (e) => {
         e.preventDefault(); initAudio();
         if (gameState === 'CUTSCENE') { advanceDialogue(); return; }
@@ -542,7 +727,6 @@
     setupTouch('btn-bomb', 'bomb', true, () => { if (gameState === 'PLAYING') player.throwPepperBomb(); });
     setupTouch('btn-dash', 'dash', true, () => { if (gameState === 'PLAYING') player.skewerDash(); });
     setupTouch('btn-ult', 'ult', true, () => { if (gameState === 'PLAYING') player.triggerUlt(); });
-    document.getElementById('dialogue-box').addEventListener('click', advanceDialogue);
 
     class FloatingText {
       constructor(x, y, text, color = '#ffa502') {
@@ -626,7 +810,7 @@
         for (let fe of flyingEnemies) {
           if (Math.hypot(fe.x + fe.w/2 - this.x, fe.y + fe.h/2 - this.y) < blastRadius) fe.hp -= 2;
         }
-        if (boss.active && Math.hypot(boss.x + boss.w/2 - this.x, boss.y + boss.h/2 - this.y) < blastRadius + 45) {
+        if (boss && boss.active && Math.hypot(boss.x + boss.w/2 - this.x, boss.y + boss.h/2 - this.y) < blastRadius + 45) {
           boss.takeDamage(2);
         }
       }
@@ -647,6 +831,390 @@
       draw(c) {
         c.save(); c.fillStyle = '#ff4757'; c.beginPath(); c.arc(this.x - cameraX, this.y, this.r, 0, Math.PI * 2); c.fill();
         c.fillStyle = '#ffa502'; c.beginPath(); c.arc(this.x - cameraX, this.y, this.r * 0.5, 0, Math.PI * 2); c.fill();
+        c.restore();
+      }
+    }
+
+    class Player {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = 100; this.y = 350; this.w = 34; this.h = 56;
+        this.vx = 0; this.vy = 0; this.speed = 4.6;
+        this.jumpForce = -14.4;
+        this.canDoubleJump = true;
+        this.isGrounded = false; this.facing = 1;
+        this.hp = 3; this.maxHp = 3;
+        this.invulnerableTimer = 0; this.attackCooldown = 0; this.bombCooldown = 0;
+        this.dashTimer = 0; this.isSlamming = false; this.animTimer = 0;
+      }
+      jump() {
+        if (this.isGrounded) {
+          this.vy = this.jumpForce; this.isGrounded = false; this.canDoubleJump = true;
+          playSound('jump');
+          for (let i = 0; i < 7; i++) particles.push(new Particle(this.x + this.w/2, this.y + this.h, '#747d8c', (Math.random()-0.5)*4, -Math.random()*3, 3));
+        } else if (this.canDoubleJump) {
+          this.vy = this.jumpForce * 0.92; this.canDoubleJump = false;
+          playSound('double_jump');
+          const txt = isFamilyFriendly ? 'САЛЬТО В ВОЗДУХЕ!' : 'САЛЬТО НАХУЙ!';
+          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 12, txt, '#70a1ff'));
+          for (let i = 0; i < 12; i++) particles.push(new Particle(this.x + this.w/2, this.y + this.h * 0.7, '#70a1ff', (Math.random()-0.5)*7, (Math.random()-0.5)*5, 4));
+        }
+      }
+      attackFork() {
+        if (this.attackCooldown <= 0) {
+          forks.push(new Fork(this.x + (this.facing === 1 ? this.w + 6 : -6), this.y + this.h * 0.45, this.facing));
+          this.attackCooldown = 12; playSound('fork');
+        }
+      }
+      throwPepperBomb() {
+        if (this.bombCooldown <= 0) {
+          pepperBombs.push(new PepperBomb(this.x + this.w/2, this.y + 10, this.facing));
+          this.bombCooldown = 38; playSound('fork');
+          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 18, 'ПЕРЕЦ ПОШЁЛ!', '#ff3838'));
+        }
+      }
+      skewerDash() {
+        if (this.dashTimer <= 0) {
+          this.dashTimer = 16; this.vx = this.facing * 13.5; this.vy = 0; this.invulnerableTimer = 22;
+          playSound('dash'); screenShake = 5;
+          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 20, 'ШАМПУРНЫЙ РЫВОК!', '#00d2d3'));
+          for (let i = 0; i < 15; i++) particles.push(new Particle(this.x + this.w/2, this.y + this.h/2, '#00d2d3', -this.facing * (Math.random()*6 + 2), (Math.random()-0.5)*4, 4));
+        }
+      }
+      groundSlam() {
+        if (!this.isGrounded && !this.isSlamming) {
+          this.isSlamming = true; this.vy = 16; this.vx = 0; playSound('dash');
+          const txt = isFamilyFriendly ? 'ПРИЗЕМЛЕНИЕ!' : 'ВНИЗ, СУКА!';
+          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 15, txt, '#ffa502'));
+        }
+      }
+      triggerUlt() {
+        if (rage >= 100) {
+          rage = 0; updateHUD(); playSound('ult'); screenShake = 22;
+          const ultTxt = isFamilyFriendly ? '⚡ БУРКАНИНСКИЙ ТРИУМФ! ⚡' : '⚡ БУРКАНИНСКИЙ РАЗЪЁБ! ⚡';
+          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 35, ultTxt, '#ff3838'));
+          for (let i = 0; i < 16; i++) {
+            const angle = (i / 16) * Math.PI * 2;
+            forks.push(new Fork(this.x + this.w/2, this.y + this.h/2, 1, true, angle));
+          }
+          for (let p = 0; p < 40; p++) particles.push(new Particle(this.x + this.w/2, this.y + this.h/2, '#ffa502', (Math.random()-0.5)*15, (Math.random()-0.5)*15, 6, 40));
+        } else {
+          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 15, `ЯРОСТЬ: ${Math.floor(rage)}%`, '#ced6e0'));
+        }
+      }
+      takeDamage(amount = 1) {
+        if (this.invulnerableTimer > 0) return;
+        this.hp -= amount; this.invulnerableTimer = 65; this.vy = -6; this.vx = -this.facing * 5;
+        playSound('hit'); updateHUD();
+
+        let bark;
+        if (isFamilyFriendly) {
+          const list = ['ОЙ, ГОРЯЧО ЖЕ!', 'АЙ-АЙ-АЙ!', 'БУЛЬОН НА СВИТЕРЕ!', 'ОСТОРОЖНО!'];
+          bark = list[Math.floor(Math.random() * list.length)];
+        } else {
+          const list = ['БЛЯТЬ, ГОРЯЧО СУКА!', 'АЙ НАХУЙ!', 'БУЛЬОН ЗА ШИВОРОТ, БЛЯТЬ!', 'СВИТЕР ЗАЛЯПАЛ, ПИДОРЫ!'];
+          bark = list[Math.floor(Math.random() * list.length)];
+        }
+        floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 18, bark, '#ff4757'));
+        for (let i = 0; i < 16; i++) particles.push(new Particle(this.x + this.w/2, this.y + this.h/2, '#ff4757', (Math.random()-0.5)*9, (Math.random()-0.5)*9, 5));
+        if (this.hp <= 0) triggerGameOver();
+      }
+      heal() {
+        if (this.hp < this.maxHp) {
+          this.hp++; updateHUD(); playSound('heal');
+          const txt = isFamilyFriendly ? 'БОРЖОМИ! ЗДОРОВЬЕ +1!' : 'БОРЖОМИ! +1 HP БЛЯТЬ!';
+          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 20, txt, '#2ed573'));
+        }
+      }
+      update(platforms) {
+        if (this.invulnerableTimer > 0) this.invulnerableTimer--;
+        if (this.attackCooldown > 0) this.attackCooldown--;
+        if (this.bombCooldown > 0) this.bombCooldown--;
+
+        if (this.dashTimer > 0) {
+          this.dashTimer--; this.x += this.vx;
+          for (let e of enemies) {
+            if (this.checkCollision(e)) { e.hp -= 2; floatingTexts.push(new FloatingText(e.x + e.w/2, e.y, 'ПРОТКНУТ!', '#00d2d3')); }
+          }
+          if (boss && boss.active && this.checkCollision(boss)) boss.takeDamage(2);
+        } else {
+          if (keys.left) { this.vx = -this.speed; this.facing = -1; this.animTimer++; }
+          else if (keys.right) { this.vx = this.speed; this.facing = 1; this.animTimer++; }
+          else { this.vx *= 0.7; if (Math.abs(this.vx) < 0.2) this.vx = 0; this.animTimer = 0; }
+          this.x += this.vx;
+        }
+        if (this.x < 10) this.x = 10;
+
+        for (let plat of platforms) {
+          if (plat.type === 'hazard') continue;
+          if (this.checkCollision(plat)) {
+            if (this.vx > 0) this.x = plat.x - this.w; else if (this.vx < 0) this.x = plat.x + plat.w;
+            this.vx = 0;
+          }
+        }
+
+        if (!this.isSlamming) { this.vy += 0.58; if (this.vy > 14) this.vy = 14; }
+        this.y += this.vy; this.isGrounded = false;
+
+        for (let plat of platforms) {
+          if (plat.type === 'hazard') {
+            if (this.checkCollision(plat)) { this.takeDamage(1); this.vy = -12; }
+            continue;
+          }
+          if (this.checkCollision(plat)) {
+            if (this.vy > 0 && (this.y + this.h - this.vy <= plat.y + 18)) {
+              this.y = plat.y - this.h; this.isGrounded = true; this.canDoubleJump = true;
+              if (this.isSlamming) {
+                this.isSlamming = false; playSound('slam'); screenShake = 14;
+                const slamTxt = isFamilyFriendly ? 'БУХ!' : 'БАБАХ НАХУЙ!';
+                floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 20, slamTxt, '#ffa502'));
+                for (let i = 0; i < 25; i++) particles.push(new Particle(this.x + this.w/2, this.y + this.h, '#ffa502', (Math.random()-0.5)*14, -Math.random()*6, 5));
+                for (let e of enemies) {
+                  if (Math.abs(e.x - this.x) < 140 && Math.abs(e.y - this.y) < 60) {
+                    e.hp -= 2; floatingTexts.push(new FloatingText(e.x + e.w/2, e.y, 'РАЗДАВЛЕН!', '#ff4757'));
+                  }
+                }
+                if (boss && boss.active && Math.abs(boss.x - this.x) < 160) boss.takeDamage(2);
+              }
+              this.vy = 0;
+            } else if (this.vy < 0) {
+              this.y = plat.y + plat.h; this.vy = 0;
+            }
+          }
+        }
+        if (this.y > 600) this.takeDamage(3);
+      }
+      checkCollision(rect) {
+        return (this.x < rect.x + rect.w && this.x + this.w > rect.x && this.y < rect.y + rect.h && this.y + this.h > rect.y);
+      }
+      draw(c) {
+        c.save(); c.translate(this.x - cameraX, this.y);
+        if (this.invulnerableTimer > 0 && Math.floor(this.invulnerableTimer / 4) % 2 === 0) c.globalAlpha = 0.4;
+        if (this.facing === -1) { c.scale(-1, 1); c.translate(-this.w, 0); }
+        if (this.dashTimer > 0) { c.fillStyle = 'rgba(0, 210, 211, 0.4)'; c.fillRect(-15, 10, this.w, this.h - 10); }
+
+        const walkBob = (this.isGrounded && Math.abs(this.vx) > 0.5) ? Math.sin(this.animTimer * 0.3) * 3 : 0;
+        c.fillStyle = 'rgba(0,0,0,0.35)'; c.beginPath(); c.ellipse(this.w / 2, this.h, 16, 5, 0, 0, Math.PI * 2); c.fill();
+
+        c.fillStyle = '#2f3542';
+        const legOffset = (this.isGrounded && Math.abs(this.vx) > 0.5) ? Math.sin(this.animTimer * 0.3) * 6 : 0;
+        c.fillRect(8, 38 + walkBob, 7, 16 - legOffset); c.fillRect(19, 38 + walkBob, 7, 16 + legOffset);
+        c.fillStyle = '#747d8c'; c.fillRect(7, 52 + walkBob - Math.max(0, legOffset), 9, 4); c.fillRect(18, 52 + walkBob + Math.max(0, legOffset), 9, 4);
+
+        c.fillStyle = '#b33939'; c.fillRect(5, 20 + walkBob, 24, 20);
+        c.fillStyle = '#d2dae2';
+        c.beginPath(); c.moveTo(17, 24 + walkBob); c.lineTo(21, 28 + walkBob); c.lineTo(17, 32 + walkBob); c.lineTo(13, 28 + walkBob); c.fill();
+
+        c.fillStyle = '#ffbe76'; c.fillRect(9, 6 + walkBob, 16, 15);
+        c.fillStyle = '#1e272e'; c.fillRect(7, 2 + walkBob, 20, 7);
+        c.fillStyle = '#2c2c54'; c.fillRect(12, 14 + walkBob, 14, 8); c.fillRect(14, 21 + walkBob, 10, 4);
+
+        c.strokeStyle = '#f9ca24'; c.lineWidth = 2; c.strokeRect(17, 9 + walkBob, 6, 5);
+        c.beginPath(); c.moveTo(15, 11 + walkBob); c.lineTo(17, 11 + walkBob); c.stroke();
+        c.fillStyle = '#fff'; c.fillRect(19, 10 + walkBob, 2, 2);
+
+        c.fillStyle = '#b33939'; c.fillRect(1, 22 + walkBob, 5, 12);
+        c.fillStyle = '#ffbe76'; c.fillRect(26, 26 + walkBob, 5, 5);
+
+        if (this.dashTimer > 0) {
+          c.fillStyle = '#f1f2f6'; c.fillRect(30, 27 + walkBob, 24, 3);
+          c.fillStyle = '#ffa502'; c.fillRect(28, 25 + walkBob, 4, 7);
+        } else {
+          c.fillStyle = '#ced6e0'; c.fillRect(28, 24 + walkBob, 10, 3);
+          c.fillStyle = '#fff'; c.fillRect(36, 22 + walkBob, 5, 7);
+        }
+        c.restore();
+      }
+    }
+
+    class KhinkaliEnemy {
+      constructor(x, y, range = 130, isShooter = false) {
+        this.startX = x; this.x = x; this.y = y; this.w = 32; this.h = 30;
+        this.range = range; this.speed = 1.4; this.dir = 1; this.hp = isShooter ? 3 : 2;
+        this.isShooter = isShooter; this.steamTimer = 0; this.jumpTimer = Math.random() * 60;
+        this.shootTimer = Math.random() * 80; this.vy = 0;
+      }
+      update(platforms) {
+        this.x += this.speed * this.dir;
+        if (Math.abs(this.x - this.startX) > this.range) this.dir *= -1;
+        this.jumpTimer++;
+        if (this.jumpTimer > 110) {
+          this.vy = -4.8; this.jumpTimer = 0;
+          if (Math.random() < 0.25) {
+            const taunts = isFamilyFriendly
+              ? ['НЕ ПОДХОДИ!', 'Я ГОРЯЧИЙ!', 'БЕРЕГИСЬ!', 'ПАР ИДЁТ!']
+              : ['ПОШЁЛ НАХУЙ!', 'СВИТЕР СНИМИ!', 'Я ГОРЯЧИЙ!', 'СУКА!'];
+            floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 12, taunts[Math.floor(Math.random()*taunts.length)], '#ffa502'));
+          }
+        }
+        if (this.isShooter) {
+          this.shootTimer++;
+          if (this.shootTimer > 150) {
+            this.shootTimer = 0;
+            if (Math.abs(player.x - this.x) < 500) {
+              const dir = player.x < this.x ? -1 : 1;
+              brothProjectiles.push(new BrothBlob(this.x + this.w/2, this.y + 10, dir * 4, -3));
+              playSound('fork');
+            }
+          }
+        }
+        this.vy += 0.42; this.y += this.vy;
+        for (let plat of platforms) {
+          if (plat.type === 'hazard') continue;
+          if (this.x < plat.x + plat.w && this.x + this.w > plat.x &&
+              this.y + this.h >= plat.y && this.y + this.h - this.vy <= plat.y + 12) {
+            this.y = plat.y - this.h; this.vy = 0;
+          }
+        }
+        this.steamTimer++;
+        if (this.steamTimer % 22 === 0) particles.push(new Particle(this.x + this.w/2, this.y, 'rgba(255,255,255,0.7)', (Math.random()-0.5), -1, 3, 25));
+      }
+      draw(c) {
+        c.save(); c.translate(this.x - cameraX, this.y);
+        c.fillStyle = this.isShooter ? '#ffeaa7' : '#f5f6fa'; c.beginPath(); c.ellipse(this.w/2, this.h - 10, this.w/2, 11, 0, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#dcdde1'; c.beginPath(); c.moveTo(2, this.h - 10); c.quadraticCurveTo(this.w/2, -4, this.w - 2, this.h - 10); c.fill();
+        c.fillStyle = '#f5f6fa'; c.beginPath(); c.arc(this.w/2, 3, 5, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#2f3542'; c.fillRect(this.dir > 0 ? 16 : 8, 12, 3, 4); c.fillRect(this.dir > 0 ? 23 : 15, 12, 3, 4);
+        c.strokeStyle = '#eb4d4b'; c.lineWidth = 1.5; c.beginPath();
+        if (this.dir > 0) { c.moveTo(15, 10); c.lineTo(20, 13); c.moveTo(26, 11); c.lineTo(22, 13); }
+        else { c.moveTo(7, 11); c.lineTo(11, 13); c.moveTo(18, 10); c.lineTo(14, 13); }
+        c.stroke();
+        c.fillStyle = '#ff7979'; c.fillRect(this.dir > 0 ? 20 : 11, 20, 3, 3);
+        c.restore();
+      }
+    }
+
+    class FlyingKhinkali {
+      constructor(x, y, range = 160) {
+        this.startX = x; this.baseY = y; this.x = x; this.y = y; this.w = 34; this.h = 32;
+        this.range = range; this.speed = 1.8; this.dir = 1; this.hp = 2; this.timer = Math.random() * 10;
+      }
+      update() {
+        this.timer += 0.05; this.x += this.speed * this.dir; this.y = this.baseY + Math.sin(this.timer) * 20;
+        if (Math.abs(this.x - this.startX) > this.range) this.dir *= -1;
+        if (Math.random() < 0.2) particles.push(new Particle(this.x + this.w/2, this.y + this.h, 'rgba(255,200,200,0.6)', (Math.random()-0.5)*2, 2, 3, 20));
+      }
+      draw(c) {
+        c.save(); c.translate(this.x - cameraX, this.y);
+        c.fillStyle = 'rgba(255, 255, 255, 0.5)'; c.beginPath();
+        c.ellipse(2, 15, 8, 4, -0.4, 0, Math.PI * 2); c.ellipse(this.w - 2, 15, 8, 4, 0.4, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#f8a5c2'; c.beginPath(); c.ellipse(this.w/2, this.h - 10, this.w/2, 11, 0, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#f78fb3'; c.beginPath(); c.arc(this.w/2, 5, 5, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#ff3838'; c.fillRect(10, 14, 4, 4); c.fillRect(20, 14, 4, 4);
+        c.restore();
+      }
+    }
+
+    class Kinza {
+      constructor(x, y) { this.x = x; this.y = y; this.w = 20; this.h = 20; this.baseY = y; this.timer = Math.random() * 10; this.collected = false; }
+      update() { this.timer += 0.08; this.y = this.baseY + Math.sin(this.timer) * 5; }
+      draw(c) {
+        c.save(); c.translate(this.x - cameraX, this.y);
+        c.fillStyle = '#2ed573'; c.beginPath(); c.arc(10, 8, 7, 0, Math.PI * 2); c.arc(6, 14, 5, 0, Math.PI * 2); c.arc(14, 14, 5, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#26af5f'; c.fillRect(9, 14, 2, 7); c.restore();
+      }
+    }
+
+    class BorjomiBottle {
+      constructor(x, y) { this.x = x; this.y = y; this.w = 18; this.h = 28; this.baseY = y; this.timer = Math.random() * 10; this.collected = false; }
+      update() { this.timer += 0.06; this.y = this.baseY + Math.sin(this.timer) * 4; }
+      draw(c) {
+        c.save(); c.translate(this.x - cameraX, this.y);
+        c.fillStyle = '#10ac84'; c.fillRect(4, 10, 10, 16); c.fillRect(7, 2, 4, 8);
+        c.fillStyle = '#ee5253'; c.fillRect(6, 0, 6, 3);
+        c.fillStyle = '#ffffff'; c.fillRect(4, 14, 10, 6);
+        c.fillStyle = '#ee5253'; c.fillRect(6, 16, 6, 2); c.restore();
+      }
+    }
+
+    class BossKhinkali {
+      constructor(x, y) {
+        this.x = x; this.y = y; this.w = 105; this.h = 96; this.hp = 32; this.maxHp = 32;
+        this.vx = -2.5; this.vy = 0; this.timer = 0; this.active = false; this.defeated = false; this.enraged = false;
+      }
+      update(platforms) {
+        if (!this.active || this.defeated) return;
+        this.timer++; this.enraged = this.hp <= this.maxHp / 2;
+        const jumpInterval = this.enraged ? 65 : 100;
+        if (this.timer % jumpInterval === 0) {
+          this.vy = this.enraged ? -14.8 : -12.0; this.vx = player.x < this.x ? (this.enraged ? -5.5 : -3.8) : (this.enraged ? 5.5 : 3.8);
+          playSound('boss_roar');
+          const barks = isFamilyFriendly
+            ? ['НЕ УЙДЁШЬ!', 'МОЙ БУЛЬОН САМЫЙ ГОРЯЧИЙ!', 'ТЕСТО СИЛЬНЕЕ ВИЛКИ!', 'БУДЬ ВЕЖЛИВ!']
+            : ['НА СКЛАДКИ ПОРВУ!', 'БУРКАНИН, ХУЙ ТЕБЕ, А НЕ КИНЗА!', 'КИПЯЩИЙ БУЛЬОН В ЕБАЛО!', 'СУКА, Я БЕССМЕРТНОЕ ТЕСТО!'];
+          floatingTexts.push(new FloatingText(this.x + this.w/2, this.y - 18, barks[Math.floor(Math.random() * barks.length)], '#ff4757'));
+        }
+        if (this.timer % 110 === 0 || (this.enraged && this.timer % 65 === 0)) {
+          const targetDir = player.x < this.x ? -1 : 1;
+          brothProjectiles.push(new BrothBlob(this.x + this.w/2, this.y + 40, targetDir * 5.5, -4.5));
+          brothProjectiles.push(new BrothBlob(this.x + this.w/2, this.y + 40, targetDir * 3.8, -6.5));
+          if (this.enraged) brothProjectiles.push(new BrothBlob(this.x + this.w/2, this.y + 40, targetDir * 7.2, -3.0));
+          playSound('fork');
+        }
+        this.vy += 0.52; this.x += this.vx; this.y += this.vy;
+        if (this.x < 5720) { this.x = 5720; this.vx *= -1; }
+        if (this.x > 6620) { this.x = 6620; this.vx *= -1; }
+        for (let plat of platforms) {
+          if (plat.type === 'hazard') continue;
+          if (this.x < plat.x + plat.w && this.x + this.w > plat.x &&
+              this.y + this.h >= plat.y && this.y + this.h - this.vy <= plat.y + 16) {
+            if (this.vy > 3) {
+              for (let i = 0; i < 12; i++) particles.push(new Particle(this.x + Math.random()*this.w, plat.y, '#ffa502', (Math.random()-0.5)*8, -Math.random()*4, 5));
+            }
+            this.y = plat.y - this.h; this.vy = 0; this.vx *= 0.85;
+          }
+        }
+        if (Math.random() < 0.45) particles.push(new Particle(this.x + this.w/2 + (Math.random()-0.5)*25, this.y, 'rgba(255, 230, 200, 0.85)', (Math.random()-0.5)*2, -2.5, 6, 35));
+        const fill = document.getElementById('boss-fill');
+        if (fill) {
+          const pct = Math.max(0, (this.hp / this.maxHp) * 100);
+          fill.style.width = pct + '%';
+        }
+        if (this.enraged) {
+          const bossRageName = isFamilyFriendly ? '🔥 ГРОЗНЫЙ ХИНКАЛИ (РАСПАЛИЛСЯ!) 🔥' : '🔥 ЕБУЧИЙ ХИНКАЛИ (В ЯРОСТИ, БЛЯТЬ!) 🔥';
+          const bl = document.getElementById('boss-label');
+          if (bl) bl.textContent = bossRageName;
+        }
+      }
+      takeDamage(amount = 1) {
+        this.hp -= amount; playSound('boss_hit'); screenShake = 6;
+        floatingTexts.push(new FloatingText(this.x + this.w/2, this.y + 10, `-${amount} ПО ТЕСТУ!`, '#ffa502'));
+        for (let i = 0; i < 10; i++) particles.push(new Particle(this.x + this.w/2, this.y + this.h/2, '#ff4757', (Math.random()-0.5)*9, (Math.random()-0.5)*9, 6));
+        if (this.hp <= 0) {
+          this.defeated = true; this.active = false;
+          playCutscene(getWinDialogue(), () => { triggerVictory(); });
+        }
+      }
+      draw(c) {
+        c.save(); c.translate(this.x - cameraX, this.y);
+        const glow = c.createRadialGradient(this.w/2, this.h/2, 20, this.w/2, this.h/2, 70);
+        glow.addColorStop(0, this.enraged ? 'rgba(255, 71, 87, 0.45)' : 'rgba(255, 165, 2, 0.3)');
+        glow.addColorStop(1, 'rgba(255, 71, 87, 0)');
+        c.fillStyle = glow; c.fillRect(-25, -25, this.w + 50, this.h + 50);
+
+        c.fillStyle = this.enraged ? '#ffcccc' : '#f1f2f6'; c.beginPath(); c.ellipse(this.w/2, this.h - 26, this.w/2, 29, 0, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#ced6e0'; c.beginPath(); c.moveTo(6, this.h - 26); c.quadraticCurveTo(this.w/2, -12, this.w - 6, this.h - 26); c.fill();
+        c.fillStyle = '#f1f2f6'; c.beginPath(); c.arc(this.w/2, 10, 15, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#a4b0be'; c.fillRect(this.w/2 - 7, 12, 14, 15);
+
+        c.fillStyle = '#ffa502'; c.beginPath();
+        c.moveTo(this.w/2 - 16, 2); c.lineTo(this.w/2 - 16, -10); c.lineTo(this.w/2 - 8, -4);
+        c.lineTo(this.w/2, -12); c.lineTo(this.w/2 + 8, -4); c.lineTo(this.w/2 + 16, -10); c.lineTo(this.w/2 + 16, 2);
+        c.closePath(); c.fill();
+
+        c.fillStyle = '#2f3542'; c.fillRect(this.w/2 - 14, 36, 3, 3); c.fillRect(this.w/2 + 12, 44, 3, 3);
+        c.fillRect(this.w/2 - 5, 50, 3, 3); c.fillRect(this.w/2 + 22, 38, 3, 3);
+
+        c.fillStyle = '#ff4757'; c.beginPath(); c.arc(this.w/2 - 20, 44, 9, 0, Math.PI * 2); c.arc(this.w/2 + 20, 44, 9, 0, Math.PI * 2); c.fill();
+        c.fillStyle = '#ffffff'; c.fillRect(this.w/2 - 21, 43, 4, 4); c.fillRect(this.w/2 + 19, 43, 4, 4);
+
+        c.strokeStyle = '#2f3542'; c.lineWidth = 4; c.beginPath();
+        c.moveTo(this.w/2 - 32, 34); c.lineTo(this.w/2 - 8, 41); c.moveTo(this.w/2 + 32, 34); c.lineTo(this.w/2 + 8, 41); c.stroke();
+
+        c.fillStyle = '#2f3542'; c.beginPath(); c.arc(this.w/2, 64, 14, 0, Math.PI); c.fill();
+        c.fillStyle = '#ffffff'; c.beginPath();
+        c.moveTo(this.w/2 - 10, 64); c.lineTo(this.w/2 - 5, 71); c.lineTo(this.w/2, 64);
+        c.moveTo(this.w/2, 64); c.lineTo(this.w/2 + 5, 71); c.lineTo(this.w/2 + 10, 64); c.fill();
         c.restore();
       }
     }
@@ -751,41 +1319,46 @@
 
     function updateHUD() {
       const hearts = '❤️❤️❤️'.slice(0, Math.max(0, player.hp * 2)) + '🖤🖤🖤'.slice(0, Math.max(0, (player.maxHp - player.hp) * 2));
-      document.getElementById('hud-hp').textContent = hearts;
-      document.getElementById('hud-score').textContent = score;
+      const hpEl = document.getElementById('hud-hp');
+      const scEl = document.getElementById('hud-score');
+      if (hpEl) hpEl.textContent = hearts;
+      if (scEl) scEl.textContent = score;
 
-      const rageFill = document.getElementById('hud-rage'), rageTxt = document.getElementById('hud-rage-txt');
-      rageFill.style.width = `${rage}%`; rageTxt.textContent = `${Math.floor(rage)}%`;
-      if (rage >= 100) { rageTxt.textContent = 'ГОТОВО!'; rageTxt.style.color = '#ff3838'; }
-      else { rageTxt.style.color = '#ffa502'; }
+      const rageFill = document.getElementById('hud-rage');
+      const rageTxt = document.getElementById('hud-rage-txt');
+      if (rageFill) rageFill.style.width = `${rage}%`;
+      if (rageTxt) {
+        rageTxt.textContent = `${Math.floor(rage)}%`;
+        if (rage >= 100) { rageTxt.textContent = 'ГОТОВО!'; rageTxt.style.color = '#ff3838'; }
+        else { rageTxt.style.color = '#ffa502'; }
+      }
 
       const zoneEl = document.getElementById('hud-zone');
-      if (player.x < 2000) { zoneEl.textContent = 'ЗОНА 1: ТБИЛИССКИЕ КРЫШИ'; zoneEl.style.color = 'var(--gold)'; }
-      else if (player.x < 4100) { zoneEl.textContent = 'ЗОНА 2: КАВКАЗСКИЙ ПЕРЕВАЛ'; zoneEl.style.color = 'var(--accent)'; }
-      else if (player.x < 5650) { zoneEl.textContent = 'ЗОНА 3: ЦЕХ КИПЯЩЕГО ТЕСТА'; zoneEl.style.color = 'var(--purple)'; }
-      else {
-        const arenaBossName = isFamilyFriendly ? 'АРЕНА ГРОЗНОГО ХИНКАЛИ' : 'АРЕНА ЕБУЧЕГО ХИНКАЛИ';
-        zoneEl.textContent = `ЗОНА 4: ${arenaBossName}`; zoneEl.style.color = 'var(--accent)';
+      if (zoneEl) {
+        if (player.x < 2000) { zoneEl.textContent = 'ЗОНА 1: ТБИЛИССКИЕ КРЫШИ'; zoneEl.style.color = 'var(--gold)'; }
+        else if (player.x < 4100) { zoneEl.textContent = 'ЗОНА 2: КАВКАЗСКИЙ ПЕРЕВАЛ'; zoneEl.style.color = 'var(--accent)'; }
+        else if (player.x < 5650) { zoneEl.textContent = 'ЗОНА 3: ЦЕХ КИПЯЩЕГО ТЕСТА'; zoneEl.style.color = 'var(--purple)'; }
+        else {
+          const arenaBossName = isFamilyFriendly ? 'АРЕНА ГРОЗНОГО ХИНКАЛИ' : 'АРЕНА ЕБУЧЕГО ХИНКАЛИ';
+          zoneEl.textContent = `ЗОНА 4: ${arenaBossName}`; zoneEl.style.color = 'var(--accent)';
+        }
       }
     }
 
-    function startIntroCutscene() {
-      player.reset(); score = 0; rage = 0;
-      forks = []; pepperBombs = []; brothProjectiles = []; particles = []; floatingTexts = [];
-      buildLevel(); updateHUD();
-      document.getElementById('start-screen').style.display = 'none';
-      document.getElementById('gameover-screen').style.display = 'none';
-      document.getElementById('victory-screen').style.display = 'none';
-      document.getElementById('boss-hud').style.display = 'none';
-      playCutscene(getIntroDialogue(), () => { gameState = 'PLAYING'; });
+    function triggerGameOver() {
+      gameState = 'GAMEOVER';
+      const go = document.getElementById('gameover-screen');
+      if (go) go.style.display = 'flex';
+      playSound('hit');
     }
-
-    function triggerGameOver() { gameState = 'GAMEOVER'; document.getElementById('gameover-screen').style.display = 'flex'; playSound('hit'); }
-    function triggerVictory() { gameState = 'WIN'; document.getElementById('victory-screen').style.display = 'flex'; document.getElementById('boss-hud').style.display = 'none'; playSound('win'); }
-
-    document.getElementById('btn-start').addEventListener('click', startIntroCutscene);
-    document.getElementById('btn-restart').addEventListener('click', startIntroCutscene);
-    document.getElementById('btn-win-restart').addEventListener('click', startIntroCutscene);
+    function triggerVictory() {
+      gameState = 'WIN';
+      const vi = document.getElementById('victory-screen');
+      const bh = document.getElementById('boss-hud');
+      if (vi) vi.style.display = 'flex';
+      if (bh) bh.style.display = 'none';
+      playSound('win');
+    }
 
     function update() {
       if (gameState !== 'PLAYING') return;
@@ -805,8 +1378,10 @@
         bossCutsceneTriggered = true;
         keys.left = keys.right = keys.jump = keys.attack = keys.bomb = keys.dash = keys.ult = false;
         playCutscene(getBossDialogue(), () => {
-          gameState = 'PLAYING'; boss.active = true;
-          document.getElementById('boss-hud').style.display = 'flex';
+          gameState = 'PLAYING';
+          if (boss) boss.active = true;
+          const bh = document.getElementById('boss-hud');
+          if (bh) bh.style.display = 'flex';
           playSound('boss_roar');
           const bossSpawnTxt = isFamilyFriendly ? 'ГРОЗНЫЙ ХИНКАЛИ В АТАКЕ!' : 'ЕБУЧИЙ ХИНКАЛИ В АТАКЕ!';
           floatingTexts.push(new FloatingText(boss.x + boss.w/2, boss.y - 30, bossSpawnTxt, '#ff4757'));
@@ -876,7 +1451,7 @@
             }
           }
         }
-        if (!hit && boss.active && !boss.defeated) {
+        if (!hit && boss && boss.active && !boss.defeated) {
           if (f.x < boss.x + boss.w && f.x + f.w > boss.x && f.y < boss.y + boss.h && f.y + f.h > boss.y) {
             boss.takeDamage(f.isUlt ? 3 : 1); addRage(10); hit = true;
           }
@@ -884,7 +1459,7 @@
         if (hit || f.life <= 0) forks.splice(i, 1);
       }
 
-      if (boss.active) {
+      if (boss && boss.active) {
         boss.update(platforms);
         if (player.x < boss.x + boss.w && player.x + player.w > boss.x && player.y < boss.y + boss.h && player.y + player.h > boss.y) {
           player.takeDamage();
